@@ -1,6 +1,8 @@
 from ._anvil_designer import Form1Template
 from anvil import *
 import anvil.server
+import anvil.js
+import base64
 import time
 
 class Form1(Form1Template):
@@ -57,69 +59,100 @@ class Form1(Form1Template):
         self.user_media = None
         self.cloth_media = None
         self.fetch_url = None
+
     def file_loader_user_change(self, file, **event_args):
         """
-        Compress ONLY the user image client-side.
+        Compress the user image client-side.
         """
         if not file:
             return
-    
-        # 1) Get the DOM node of the entire FileLoader
+
         file_loader_node = anvil.js.get_dom_node(self.file_loader_user)
-    
-        # 2) Query inside it for the real <input type="file">
         js_file_input = file_loader_node.querySelector("input[type='file']")
+
         if js_file_input and js_file_input.files and js_file_input.files.length > 0:
-            js_file_obj = js_file_input.files[0]  # The raw JavaScript File object
-    
-            # 3) Call our JS compression function
+            js_file_obj = js_file_input.files[0]
             promise = anvil.js.call_js("compressImage", js_file_obj, 600)  # maxWidth=600
-    
+
             def on_success(data_url):
-                # data_url is "data:image/jpeg;base64,..."
                 comma_idx = data_url.find(",")
                 if comma_idx < 0:
                     alert("Invalid data URL after compression.")
                     return
+
                 meta_part = data_url[:comma_idx]  # e.g. "data:image/jpeg;base64"
                 b64_data = data_url[comma_idx+1:]
-    
-                # Determine content_type from meta_part
+
                 if "image/png" in meta_part:
                     content_type = "image/png"
                 else:
                     content_type = "image/jpeg"
-    
-                import base64
+
                 raw_bytes = base64.b64decode(b64_data)
                 compressed_media = BlobMedia(content_type, raw_bytes, name="compressed_user.jpg")
-    
+
                 self.user_media = compressed_media
                 self.image_user_preview.source = compressed_media
                 print(f"Compressed user image size: {len(raw_bytes)} bytes")
-    
+
             def on_error(err):
                 alert(f"Error compressing user image: {err}")
-    
-            promise = anvil.js.call_js("compressImage", js_file_obj, 600)
 
+            # Await the promise
             try:
-                # "await" the promise. If it resolves, we get the result here.
                 data_url = anvil.js.await_promise(promise)
-                # This is your "success" path
                 on_success(data_url)
             except Exception as e:
-                # If the promise is rejected, we get an exception in Python
                 on_error(e)
-
         else:
-            alert("Could not find the actual file input. No file selected?")
+            alert("Could not find the user file input. No file selected?")
 
-  
     def file_loader_cloth_change(self, file, **event_args):
-        if file:
-            self.cloth_media = file
-            self.image_cloth_preview.source = file
+        """
+        Compress the cloth image client-side.
+        """
+        if not file:
+            return
+
+        file_loader_node = anvil.js.get_dom_node(self.file_loader_cloth)
+        js_file_input = file_loader_node.querySelector("input[type='file']")
+
+        if js_file_input and js_file_input.files and js_file_input.files.length > 0:
+            js_file_obj = js_file_input.files[0]
+            promise = anvil.js.call_js("compressImage", js_file_obj, 600)  # maxWidth=600
+
+            def on_success(data_url):
+                comma_idx = data_url.find(",")
+                if comma_idx < 0:
+                    alert("Invalid data URL after compression.")
+                    return
+
+                meta_part = data_url[:comma_idx]  # e.g. "data:image/jpeg;base64"
+                b64_data = data_url[comma_idx+1:]
+
+                if "image/png" in meta_part:
+                    content_type = "image/png"
+                else:
+                    content_type = "image/jpeg"
+
+                raw_bytes = base64.b64decode(b64_data)
+                compressed_media = BlobMedia(content_type, raw_bytes, name="compressed_cloth.jpg")
+
+                self.cloth_media = compressed_media
+                self.image_cloth_preview.source = compressed_media
+                print(f"Compressed cloth image size: {len(raw_bytes)} bytes")
+
+            def on_error(err):
+                alert(f"Error compressing cloth image: {err}")
+
+            # Await the promise
+            try:
+                data_url = anvil.js.await_promise(promise)
+                on_success(data_url)
+            except Exception as e:
+                on_error(e)
+        else:
+            alert("Could not find the cloth file input. No file selected?")
 
     def button_start_click(self, **event_args):
         # Validate
@@ -132,19 +165,16 @@ class Form1(Form1Template):
         self.label_status.text = "Submitting job..."
         self.fetch_url = None
 
-        # 1) Call 'start_try_on' server function
         try:
+            # Call 'start_try_on' server function
             result = anvil.server.call('start_try_on', self.user_media, self.cloth_media)
             if result["status"] == "success":
-                # Instantly got the final image
                 self.image_result.source = result["image"]
                 self.label_status.text = "Done! (Instant result)"
             elif result["status"] == "processing":
-                # We have a fetch_url
                 self.fetch_url = result["fetch_url"]
                 eta = result.get("eta", 10)
                 self.label_status.text = f"Submitted job, still processing... ETA ~{eta} seconds."
-                # Start the polling timer
                 self.timer_poll.enabled = True
             else:
                 alert(f"Unexpected status: {result}")
@@ -153,9 +183,7 @@ class Form1(Form1Template):
             self.label_status.text = "Error"
 
     def timer_poll_tick(self, **event_args):
-        # This is called every 3s to poll job status
         if not self.fetch_url:
-            # No fetch_url to check
             self.timer_poll.enabled = False
             return
 
@@ -163,17 +191,14 @@ class Form1(Form1Template):
         try:
             check_result = anvil.server.call('check_try_on', self.fetch_url)
             if check_result["status"] == "success":
-                # We have a final image
                 self.image_result.source = check_result["image"]
                 self.label_status.text = "Done!"
                 self.timer_poll.enabled = False
                 self.fetch_url = None
             elif check_result["status"] == "processing":
-                # Still not ready
                 eta = check_result.get("eta", 10)
                 self.label_status.text = f"Still processing... Next check in 3s. (ETA ~{eta}s)"
             else:
-                # Unexpected?
                 alert(f"Unexpected status: {check_result}")
                 self.label_status.text = "Error"
                 self.timer_poll.enabled = False
