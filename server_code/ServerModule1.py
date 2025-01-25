@@ -110,7 +110,7 @@ def start_try_on(user_media, cloth_media):
         raise Exception(f"Failed to start job: {resp.text}")
 
     data = resp.json()
-    print(resp)
+    print(data)
     status = data.get("status")
     if status == "success":
         # The API returned an immediate result
