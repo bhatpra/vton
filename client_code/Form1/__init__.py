@@ -179,7 +179,7 @@ class Form1(Form1Template):
             else:
                 alert(f"Unexpected status: {result}")
         except Exception as e:
-            alert(f"Error starting job: {e}")
+            alert(f"Error submitting job: {e}")
             self.label_status.text = "Error"
 
     def timer_poll_tick(self, **event_args):

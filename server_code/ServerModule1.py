@@ -92,7 +92,7 @@ def start_try_on(user_media, cloth_media):
         "negative_prompt": "Low quality, unrealistic, warped cloth",
         "init_image": model_url,
         "cloth_image": cloth_url,
-        "cloth_type": "upper_body",
+        "cloth_type": "dresses",
         "height": 512,
         "width": 384,
         "guidance_scale": 8.0,
@@ -104,11 +104,13 @@ def start_try_on(user_media, cloth_media):
     })
     headers = {"Content-Type": "application/json"}
     resp = requests.post(API_URL, headers=headers, data=payload)
+    print(resp)
 
     if resp.status_code != 200:
         raise Exception(f"Failed to start job: {resp.text}")
 
     data = resp.json()
+    print(resp)
     status = data.get("status")
     if status == "success":
         # The API returned an immediate result
