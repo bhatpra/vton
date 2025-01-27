@@ -64,7 +64,7 @@ def upload_to_sd(file_path):
 # Two-step approach
 # -------------
 @anvil.server.callable
-def start_try_on(user_media, cloth_media):
+def start_try_on(user_media, cloth_media, user_prompt=""):
     """
     1) Save images locally
     2) Upload them to the 'SD crop' endpoint => get URLs
@@ -72,6 +72,11 @@ def start_try_on(user_media, cloth_media):
     4) Return either:
        - { "status": "success", "image": <BlobMedia> } if the API instantly returned a result
        - { "status": "processing", "fetch_url": <the fetch URL> } if we must poll
+    
+    Args:
+        user_media: The user's image
+        cloth_media: The clothing image
+        user_prompt: Optional user-provided prompt to append to base prompt
     """
     # Save to local files
     model_path = "model_image.jpg"
@@ -86,9 +91,12 @@ def start_try_on(user_media, cloth_media):
     cloth_url = upload_to_sd(cloth_path)
 
     # Build payload for the main API
+    base_prompt = "A realistic photo of the model wearing the cloth. Maintain color and texture."
+    final_prompt = f"{base_prompt} {user_prompt}".strip()  # Combine prompts, strip extra spaces
+    
     payload = json.dumps({
         "key": API_KEY,
-        "prompt": "A realistic photo of the model wearing the cloth. Maintain color and texture.",
+        "prompt": final_prompt,
         "negative_prompt": "Low quality, unrealistic, warped cloth",
         "init_image": model_url,
         "cloth_image": cloth_url,

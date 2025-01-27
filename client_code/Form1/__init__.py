@@ -13,7 +13,7 @@ class Form1(Form1Template):
 
         # Title
         self.label_title = Label(
-            text="DSI Try-On Demo",
+            text="EZ Apparel Try On Demo v0.27",
             align="center",
             font_size=20,
             bold=True
@@ -59,6 +59,14 @@ class Form1(Form1Template):
         self.user_media = None
         self.cloth_media = None
         self.fetch_url = None
+
+        # Add TextBox for user prompt
+        self.text_box_prompt = TextBox(
+            placeholder="Enter your prompt here...",
+            width="100%",
+            align="center"
+        )
+        self.add_component(self.text_box_prompt)
 
     def file_loader_user_change(self, file, **event_args):
         """
@@ -155,19 +163,22 @@ class Form1(Form1Template):
             alert("Could not find the cloth file input. No file selected?")
 
     def button_start_click(self, **event_args):
-        # Validate
         if not self.user_media or not self.cloth_media:
             alert("Please upload both user and cloth images first.")
             return
-
+        
+        # Assuming you have a text_box_prompt TextBox component
+        user_prompt = self.text_box_prompt.text
+        
+        # Pass the prompt to the server function
+        result = anvil.server.call('start_try_on', self.user_media, self.cloth_media, user_prompt)
+        
         # Clear old result
         self.image_result.source = None
         self.label_status.text = "Submitting job..."
         self.fetch_url = None
 
         try:
-            # Call 'start_try_on' server function
-            result = anvil.server.call('start_try_on', self.user_media, self.cloth_media)
             if result["status"] == "success":
                 self.image_result.source = result["image"]
                 self.label_status.text = "Done! (Instant result)"
