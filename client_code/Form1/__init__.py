@@ -19,9 +19,12 @@ class Form1(Form1Template):
     def __init__(self, **properties):
         # Check if user is logged in
         if not anvil.users.get_user():
+          anvil.users.login_with_form()
+
+          print('This user has logged in: ' + anvil.users.get_user()['email'])
             # Redirect to login if not authenticated
-            open_form('LoginForm')
-            return
+            #open_form('LoginForm')
+           # return
             
         # Set up the form
         self.init_components(**properties)

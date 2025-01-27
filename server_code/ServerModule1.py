@@ -104,7 +104,7 @@ def start_try_on(user_media, cloth_media, user_prompt=""):
     cloth_url = upload_to_sd(cloth_path)
 
     # Build payload for the main API
-    base_prompt = "A realistic photo of the model wearing the cloth. Maintain color and texture."
+    base_prompt = "A realistic photo of the model wearing the cloth. Maintain color, texture and lenght of the cloth."
     final_prompt = f"{base_prompt} {user_prompt}".strip()  # Combine prompts, strip extra spaces
     
     payload = json.dumps({
@@ -136,6 +136,8 @@ def start_try_on(user_media, cloth_media, user_prompt=""):
     if status == "success":
         # The API returned an immediate result
         # Usually "proxy_links" or "output" has the final image
+        if "future_links" in data:
+            final_url = data["proxy_links"][0]
         if "proxy_links" in data:
             final_url = data["proxy_links"][0]
         elif "output" in data:
