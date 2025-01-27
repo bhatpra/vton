@@ -4,10 +4,17 @@ import anvil.server
 import anvil.js
 import base64
 import time
+import anvil.users
 
 class Form1(Form1Template):
 
     def __init__(self, **properties):
+        # Check if user is logged in
+        if not anvil.users.get_user():
+            # Redirect to login if not authenticated
+            open_form('LoginForm')
+            return
+            
         # Set up the form
         self.init_components(**properties)
 
@@ -67,8 +74,6 @@ class Form1(Form1Template):
         self.user_media = None
         self.cloth_media = None
         self.fetch_url = None
-
-
 
     def file_loader_user_change(self, file, **event_args):
         """
@@ -221,3 +226,7 @@ class Form1(Form1Template):
             self.label_status.text = "Error"
             self.timer_poll.enabled = False
             self.fetch_url = None
+
+    def button_logout_click(self, **event_args):
+        anvil.users.logout()
+        open_form('LoginForm')

@@ -6,6 +6,7 @@ import time
 import io
 import base64
 from PIL import Image
+import anvil.users
 
 API_URL = "https://modelslab.com/api/v6/image_editing/fashion"
 CROP_API_URL = "https://modelslab.com/api/v3/base64_crop"
@@ -78,6 +79,10 @@ def start_try_on(user_media, cloth_media, user_prompt=""):
         cloth_media: The clothing image
         user_prompt: Optional user-provided prompt to append to base prompt
     """
+    # Require authentication for this endpoint
+    if not anvil.users.get_user():
+        raise Exception("Authentication required")
+        
     # Save to local files
     model_path = "model_image.jpg"
     cloth_path = "cloth_image.jpg"
@@ -176,3 +181,13 @@ def check_try_on(fetch_url):
 
     else:
         raise Exception(f"Unexpected status {status} from fetch_url: {data}")
+
+# Optional: Add user-specific data storage
+@anvil.server.callable
+def save_user_preferences(preferences):
+    user = anvil.users.get_user()
+    if not user:
+        raise Exception("Authentication required")
+    
+    # Save to user's row in the Users table
+    user['preferences'] = preferences
