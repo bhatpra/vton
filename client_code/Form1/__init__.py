@@ -36,6 +36,14 @@ class Form1(Form1Template):
         self.image_cloth_preview = Image(width=200, height=200, align="center")
         self.add_component(self.image_cloth_preview)
 
+        # Add TextBox for user prompt
+        self.text_box_prompt = TextBox(
+            placeholder="Enter your extra prompt here...",
+            width="100%",
+            align="center"
+        )
+        self.add_component(self.text_box_prompt)
+
         # "Start Try-On" Button
         self.button_start = Button(text="Start Try-On", background="#2196F3", foreground="#FFFFFF")
         self.button_start.set_event_handler("click", self.button_start_click)
@@ -60,13 +68,7 @@ class Form1(Form1Template):
         self.cloth_media = None
         self.fetch_url = None
 
-        # Add TextBox for user prompt
-        self.text_box_prompt = TextBox(
-            placeholder="Enter your prompt here...",
-            width="100%",
-            align="center"
-        )
-        self.add_component(self.text_box_prompt)
+
 
     def file_loader_user_change(self, file, **event_args):
         """
