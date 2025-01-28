@@ -128,18 +128,36 @@ class Form1(Form1Template):
                 spacing_below="small"
             )
         
+        # Create labels for each input
+        labels = {
+            'prompt': Label(text="Custom Prompt:", font_size=14, bold=True),
+            'negative': Label(text="Negative Prompt (what to avoid):", font_size=14, bold=True),
+            'cloth_type': Label(text="Clothing Type:", font_size=14, bold=True),
+            'guidance': Label(text="Guidance Scale (1-20):", font_size=14, bold=True),
+            'steps': Label(text="Inference Steps:", font_size=14, bold=True)
+        }
+        
         # Remove components from any existing parents first
         for component in [self.text_box_prompt, self.text_box_negative_prompt, 
                          self.dropdown_cloth_type, self.text_box_guidance, 
-                         self.dropdown_steps]:  # Removed file_loader_cloth from this list
+                         self.dropdown_steps]:
             if component.parent:
                 component.remove_from_parent()
         
-        # Add components to the flow panel (excluding file_loader_cloth)
+        # Add components with labels to the flow panel
+        self.flow_panel_inputs.add_component(labels['prompt'])
         self.flow_panel_inputs.add_component(self.text_box_prompt)
+        
+        self.flow_panel_inputs.add_component(labels['negative'])
         self.flow_panel_inputs.add_component(self.text_box_negative_prompt)
+        
+        self.flow_panel_inputs.add_component(labels['cloth_type'])
         self.flow_panel_inputs.add_component(self.dropdown_cloth_type)
+        
+        self.flow_panel_inputs.add_component(labels['guidance'])
         self.flow_panel_inputs.add_component(self.text_box_guidance)
+        
+        self.flow_panel_inputs.add_component(labels['steps'])
         self.flow_panel_inputs.add_component(self.dropdown_steps)
         
         # Add the flow panel to the form
