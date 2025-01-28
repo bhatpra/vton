@@ -130,20 +130,19 @@ class Form1(Form1Template):
         
         # Remove components from any existing parents first
         for component in [self.text_box_prompt, self.text_box_negative_prompt, 
-                         self.file_loader_cloth, self.dropdown_cloth_type,
-                         self.text_box_guidance, self.dropdown_steps]:
+                         self.dropdown_cloth_type, self.text_box_guidance, 
+                         self.dropdown_steps]:  # Removed file_loader_cloth from this list
             if component.parent:
                 component.remove_from_parent()
         
-        # Add all components to the new panel
+        # Add components to the flow panel (excluding file_loader_cloth)
         self.flow_panel_inputs.add_component(self.text_box_prompt)
         self.flow_panel_inputs.add_component(self.text_box_negative_prompt)
-        self.flow_panel_inputs.add_component(self.file_loader_cloth)
         self.flow_panel_inputs.add_component(self.dropdown_cloth_type)
         self.flow_panel_inputs.add_component(self.text_box_guidance)
         self.flow_panel_inputs.add_component(self.dropdown_steps)
         
-        # Add the panel to the form
+        # Add the flow panel to the form
         self.add_component(self.flow_panel_inputs)
 
         # "Start Try-On" Button
