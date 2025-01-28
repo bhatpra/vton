@@ -313,8 +313,9 @@ class Form1(Form1Template):
         # Get all input values
         cloth_type = self.dropdown_cloth_type.selected_value
         user_prompt = self.text_box_prompt.text
+        negative_prompt = self.text_box_negative_prompt.text  # Get negative prompt from text box
+        num_steps = int(self.dropdown_steps.selected_value)
         
-        # Get and validate guidance scale
         try:
             guidance_scale = float(self.text_box_guidance.text or "10")
             if guidance_scale <= 0:
@@ -322,9 +323,6 @@ class Form1(Form1Template):
         except ValueError:
             alert("Please enter a valid positive number for guidance scale")
             return
-        
-        # Convert selected value back to integer
-        num_steps = int(self.dropdown_steps.selected_value)
         
         # Pass all parameters to server
         result = anvil.server.call('start_try_on', 
@@ -334,7 +332,7 @@ class Form1(Form1Template):
                                  cloth_type,
                                  guidance_scale,
                                  num_steps,
-                                 negative_prompt)
+                                 negative_prompt)  # Pass the negative prompt
         
         # Clear old result
         self.image_result.source = None
