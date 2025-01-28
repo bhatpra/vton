@@ -112,10 +112,10 @@ class Form1(Form1Template):
             text="10"
         )
         
-        # Add inference steps dropdown with only valid values
+        # Convert numbers to strings for dropdown
         self.dropdown_steps = DropDown(
-            items=[21, 31, 41],  # Only allowed values per API docs
-            selected_value=21,  # Default value
+            items=[str(x) for x in [21, 31, 41]],  # Convert numbers to strings
+            selected_value="21",  # Convert default value to string
             width=200
         )
         
@@ -287,9 +287,8 @@ class Form1(Form1Template):
         # Get all input values
         cloth_type = self.dropdown_cloth_type.selected_value
         user_prompt = self.text_box_prompt.text
-        negative_prompt = self.text_box_negative_prompt.text
-        num_steps = self.dropdown_steps.selected_value
         
+        # Get and validate guidance scale
         try:
             guidance_scale = float(self.text_box_guidance.text or "10")
             if guidance_scale <= 0:
@@ -297,6 +296,9 @@ class Form1(Form1Template):
         except ValueError:
             alert("Please enter a valid positive number for guidance scale")
             return
+        
+        # Convert selected value back to integer
+        num_steps = int(self.dropdown_steps.selected_value)
         
         # Pass all parameters to server
         result = anvil.server.call('start_try_on', 
