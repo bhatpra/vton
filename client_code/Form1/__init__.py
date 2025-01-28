@@ -103,9 +103,8 @@ class Form1(Form1Template):
             width=200
         )
         
-        # Create a new column panel for inputs (changed from FlowPanel to ColumnPanel)
+        # Create a new column panel for inputs
         self.column_panel_inputs = ColumnPanel(
-            align="center",
             spacing_above="small",
             spacing_below="small"
         )
