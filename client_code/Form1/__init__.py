@@ -121,10 +121,19 @@ class Form1(Form1Template):
     def button_logout_click(self, **event_args):
         """This method is called when the logout button is clicked"""
         try:
+            print("Attempting to logout...")  # Debug print
+            current_user = anvil.users.get_user()
+            print(f"Current user: {current_user}")  # Debug print
+            
             anvil.users.logout()
-            open_form('LoginForm')
-        except:
-            alert("Logout failed. Please try again.")
+            print("Logout successful")  # Debug print
+            
+            # Add a small delay before form transition
+            anvil.js.window.setTimeout(lambda: open_form('LoginForm'), 100)
+            
+        except Exception as e:
+            print(f"Logout error: {str(e)}")  # Debug print
+            alert(f"Logout failed: {str(e)}")
 
     def file_loader_user_change(self, file, **event_args):
         """
