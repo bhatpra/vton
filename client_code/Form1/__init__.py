@@ -89,6 +89,13 @@ class Form1(Form1Template):
             text="10"
         )
         
+        # Add cloth type dropdown
+        self.dropdown_cloth_type = DropDown(
+            items=['upper_body', 'lower_body', 'dresses'],
+            selected_value='dresses',  # Default to dresses
+            width=200
+        )
+        
         # Convert numbers to strings for dropdown
         self.dropdown_steps = DropDown(
             items=[str(x) for x in [21, 31, 41]],  # Convert numbers to strings
