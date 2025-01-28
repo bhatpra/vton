@@ -81,29 +81,6 @@ class Form1(Form1Template):
         self.image_cloth_preview = Image(width=200, height=200, align="center")
         self.add_component(self.image_cloth_preview)
 
-        # Add text box for user prompt
-        self.text_box_prompt = TextBox(
-            placeholder="Enter your prompt here...",
-            width="100%",
-            spacing_above="small",
-            spacing_below="small"
-        )
-        
-        # Add text box for negative prompt
-        self.text_box_negative_prompt = TextBox(
-            placeholder="Enter negative prompt here (what to avoid)...",
-            width="100%",
-            spacing_above="small",
-            spacing_below="small"
-        )
-        
-        # Add dropdown for cloth type selection
-        self.dropdown_cloth_type = DropDown(
-            items=['upper_body', 'lower_body', 'dresses'],
-            selected_value='dresses',  # Changed default to dresses
-            width=200
-        )
-        
         # Add guidance scale input
         self.text_box_guidance = TextBox(
             placeholder="Guidance Scale (default: 10)",
@@ -119,14 +96,39 @@ class Form1(Form1Template):
             width=200
         )
         
-        # Add components in a flow panel
+        # Create a new flow panel for inputs
         self.flow_panel_inputs = FlowPanel(
             align="center",
             spacing_above="small",
             spacing_below="small"
         )
         
-        # Add all components to the panel
+        # Create text box for user prompt if it doesn't exist
+        if not hasattr(self, 'text_box_prompt'):
+            self.text_box_prompt = TextBox(
+                placeholder="Enter your prompt here...",
+                width="100%",
+                spacing_above="small",
+                spacing_below="small"
+            )
+        
+        # Create text box for negative prompt
+        if not hasattr(self, 'text_box_negative_prompt'):
+            self.text_box_negative_prompt = TextBox(
+                placeholder="Enter negative prompt here (what to avoid)...",
+                width="100%",
+                spacing_above="small",
+                spacing_below="small"
+            )
+        
+        # Remove components from any existing parents first
+        for component in [self.text_box_prompt, self.text_box_negative_prompt, 
+                         self.file_loader_cloth, self.dropdown_cloth_type,
+                         self.text_box_guidance, self.dropdown_steps]:
+            if component.parent:
+                component.remove_from_parent()
+        
+        # Add all components to the new panel
         self.flow_panel_inputs.add_component(self.text_box_prompt)
         self.flow_panel_inputs.add_component(self.text_box_negative_prompt)
         self.flow_panel_inputs.add_component(self.file_loader_cloth)
@@ -134,7 +136,7 @@ class Form1(Form1Template):
         self.flow_panel_inputs.add_component(self.text_box_guidance)
         self.flow_panel_inputs.add_component(self.dropdown_steps)
         
-        # Add to form
+        # Add the panel to the form
         self.add_component(self.flow_panel_inputs)
 
         # "Start Try-On" Button
