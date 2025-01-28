@@ -73,7 +73,7 @@ def upload_to_sd(file_path):
 # Two-step approach
 # -------------
 @anvil.server.callable
-def start_try_on(user_media, cloth_media, user_prompt=""):
+def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", guidance_scale=10.0, num_steps=21, negative_prompt=""):
     """
     1) Save images locally
     2) Upload them to the 'SD crop' endpoint => get URLs
@@ -86,6 +86,10 @@ def start_try_on(user_media, cloth_media, user_prompt=""):
         user_media: The user's image
         cloth_media: The clothing image
         user_prompt: Optional user-provided prompt to append to base prompt
+        cloth_type: The type of clothing
+        guidance_scale: The guidance scale for the Stable Diffusion model
+        num_steps: The number of inference steps for the Stable Diffusion model
+        negative_prompt: Optional user-provided negative prompt to append to base negative prompt
     """
     # Require authentication for this endpoint
     if not anvil.users.get_user():
@@ -104,20 +108,24 @@ def start_try_on(user_media, cloth_media, user_prompt=""):
     cloth_url = upload_to_sd(cloth_path)
 
     # Build payload for the main API
-    base_prompt = "A realistic photo of the model wearing the cloth. Maintain color, texture and full lenght of the cloth."
-    final_prompt = f"{base_prompt} {user_prompt}".strip()  # Combine prompts, strip extra spaces
+    base_prompt = "A realistic photo of the model wearing the cloth. Maintain color and texture"
+    final_prompt = f"{base_prompt}, {user_prompt}".strip()
+    
+    # Combine default negative prompt with user's negative prompt
+    base_negative = "Low quality, unrealistic, warped cloth"
+    final_negative = f"{base_negative}, {negative_prompt}".strip()
     
     payload = json.dumps({
         "key": API_KEY,
         "prompt": final_prompt,
-        "negative_prompt": "Low quality, unrealistic, warped cloth, lenght of the cloth in generated image not matching the input cloth",
+        "negative_prompt": final_negative,  # Using combined negative prompt
         "init_image": model_url,
         "cloth_image": cloth_url,
-        "cloth_type": "dresses",
+        "cloth_type": cloth_type,
         "height": 512,
         "width": 384,
-        "guidance_scale": 8.0,
-        "num_inference_steps": 21,
+        "guidance_scale": guidance_scale,
+        "num_inference_steps": num_steps,
         "seed": 128915590,
         "temp": "no",
         "webhook": None,

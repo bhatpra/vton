@@ -81,13 +81,61 @@ class Form1(Form1Template):
         self.image_cloth_preview = Image(width=200, height=200, align="center")
         self.add_component(self.image_cloth_preview)
 
-        # Add TextBox for user prompt
+        # Add text box for user prompt
         self.text_box_prompt = TextBox(
-            placeholder="Enter your extra prompt here...",
+            placeholder="Enter your prompt here...",
             width="100%",
-            align="center"
+            spacing_above="small",
+            spacing_below="small"
         )
-        self.add_component(self.text_box_prompt)
+        
+        # Add text box for negative prompt
+        self.text_box_negative_prompt = TextBox(
+            placeholder="Enter negative prompt here (what to avoid)...",
+            width="100%",
+            spacing_above="small",
+            spacing_below="small"
+        )
+        
+        # Add dropdown for cloth type selection
+        self.dropdown_cloth_type = DropDown(
+            items=['upper_body', 'lower_body', 'dresses'],
+            selected_value='dresses',  # Changed default to dresses
+            width=200
+        )
+        
+        # Add guidance scale input
+        self.text_box_guidance = TextBox(
+            placeholder="Guidance Scale (default: 10)",
+            type="number",
+            width=200,
+            text="10"
+        )
+        
+        # Add inference steps dropdown with only valid values
+        self.dropdown_steps = DropDown(
+            items=[21, 31, 41],  # Only allowed values per API docs
+            selected_value=21,  # Default value
+            width=200
+        )
+        
+        # Add components in a flow panel
+        self.flow_panel_inputs = FlowPanel(
+            align="center",
+            spacing_above="small",
+            spacing_below="small"
+        )
+        
+        # Add all components to the panel
+        self.flow_panel_inputs.add_component(self.text_box_prompt)
+        self.flow_panel_inputs.add_component(self.text_box_negative_prompt)
+        self.flow_panel_inputs.add_component(self.file_loader_cloth)
+        self.flow_panel_inputs.add_component(self.dropdown_cloth_type)
+        self.flow_panel_inputs.add_component(self.text_box_guidance)
+        self.flow_panel_inputs.add_component(self.dropdown_steps)
+        
+        # Add to form
+        self.add_component(self.flow_panel_inputs)
 
         # "Start Try-On" Button
         self.button_start = Button(text="Start Try-On", background="#2196F3", foreground="#FFFFFF")
@@ -236,11 +284,29 @@ class Form1(Form1Template):
             alert("Please upload both user and cloth images first.")
             return
         
-        # Assuming you have a text_box_prompt TextBox component
+        # Get all input values
+        cloth_type = self.dropdown_cloth_type.selected_value
         user_prompt = self.text_box_prompt.text
+        negative_prompt = self.text_box_negative_prompt.text
+        num_steps = self.dropdown_steps.selected_value
         
-        # Pass the prompt to the server function
-        result = anvil.server.call('start_try_on', self.user_media, self.cloth_media, user_prompt)
+        try:
+            guidance_scale = float(self.text_box_guidance.text or "10")
+            if guidance_scale <= 0:
+                raise ValueError("Guidance scale must be positive")
+        except ValueError:
+            alert("Please enter a valid positive number for guidance scale")
+            return
+        
+        # Pass all parameters to server
+        result = anvil.server.call('start_try_on', 
+                                 self.user_media, 
+                                 self.cloth_media,
+                                 user_prompt,
+                                 cloth_type,
+                                 guidance_scale,
+                                 num_steps,
+                                 negative_prompt)
         
         # Clear old result
         self.image_result.source = None
