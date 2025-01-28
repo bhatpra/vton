@@ -32,17 +32,18 @@ class Form1(Form1Template):
         self.flow_panel_header = FlowPanel(
             align="right",
             width="100%",
-            background="theme:primary",
-            padding=10
+            background="theme:primary"
         )
+        # Set padding using spacing_above/below properties
+        self.flow_panel_header.spacing_above = "small"
+        self.flow_panel_header.spacing_below = "small"
         
         # Create logout button
         self.button_logout = Button(
             text="Logout",
             icon="fa:sign-out",
             role="secondary-color",
-            font_size=14,
-            padding=8
+            font_size=14
         )
         self.button_logout.set_event_handler('click', self.button_logout_click)
         
@@ -50,7 +51,7 @@ class Form1(Form1Template):
         self.flow_panel_header.add_component(self.button_logout)
         
         # Add panel to form (at the top)
-        self.add_component(self.flow_panel_header, index=0)  # index=0 puts it at the top
+        self.add_component(self.flow_panel_header, index=0)
         
         # Set up logout button text
         self.setup_logout_button()
