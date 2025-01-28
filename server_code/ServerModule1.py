@@ -104,13 +104,13 @@ def start_try_on(user_media, cloth_media, user_prompt=""):
     cloth_url = upload_to_sd(cloth_path)
 
     # Build payload for the main API
-    base_prompt = "A realistic photo of the model wearing the cloth. Maintain color, texture and lenght of the cloth."
+    base_prompt = "A realistic photo of the model wearing the cloth. Maintain color, texture and full lenght of the cloth."
     final_prompt = f"{base_prompt} {user_prompt}".strip()  # Combine prompts, strip extra spaces
     
     payload = json.dumps({
         "key": API_KEY,
         "prompt": final_prompt,
-        "negative_prompt": "Low quality, unrealistic, warped cloth",
+        "negative_prompt": "Low quality, unrealistic, warped cloth, lenght of the cloth in generated image not matching the input cloth",
         "init_image": model_url,
         "cloth_image": cloth_url,
         "cloth_type": "dresses",
@@ -124,6 +124,7 @@ def start_try_on(user_media, cloth_media, user_prompt=""):
         "track_id": None
     })
     headers = {"Content-Type": "application/json"}
+    print ("request:\n"+payload)
     resp = requests.post(API_URL, headers=headers, data=payload)
     print(resp)
 
