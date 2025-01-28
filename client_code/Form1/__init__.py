@@ -103,8 +103,8 @@ class Form1(Form1Template):
             width=200
         )
         
-        # Create a new flow panel for inputs
-        self.flow_panel_inputs = FlowPanel(
+        # Create a new column panel for inputs (changed from FlowPanel to ColumnPanel)
+        self.column_panel_inputs = ColumnPanel(
             align="center",
             spacing_above="small",
             spacing_below="small"
@@ -144,24 +144,25 @@ class Form1(Form1Template):
             if component.parent:
                 component.remove_from_parent()
         
-        # Add components with labels to the flow panel
-        self.flow_panel_inputs.add_component(labels['prompt'])
-        self.flow_panel_inputs.add_component(self.text_box_prompt)
+        # Add components with labels to the column panel
+        # Each component gets its own line
+        self.column_panel_inputs.add_component(labels['prompt'])
+        self.column_panel_inputs.add_component(self.text_box_prompt)
         
-        self.flow_panel_inputs.add_component(labels['negative'])
-        self.flow_panel_inputs.add_component(self.text_box_negative_prompt)
+        self.column_panel_inputs.add_component(labels['negative'])
+        self.column_panel_inputs.add_component(self.text_box_negative_prompt)
         
-        self.flow_panel_inputs.add_component(labels['cloth_type'])
-        self.flow_panel_inputs.add_component(self.dropdown_cloth_type)
+        self.column_panel_inputs.add_component(labels['cloth_type'])
+        self.column_panel_inputs.add_component(self.dropdown_cloth_type)
         
-        self.flow_panel_inputs.add_component(labels['guidance'])
-        self.flow_panel_inputs.add_component(self.text_box_guidance)
+        self.column_panel_inputs.add_component(labels['guidance'])
+        self.column_panel_inputs.add_component(self.text_box_guidance)
         
-        self.flow_panel_inputs.add_component(labels['steps'])
-        self.flow_panel_inputs.add_component(self.dropdown_steps)
+        self.column_panel_inputs.add_component(labels['steps'])
+        self.column_panel_inputs.add_component(self.dropdown_steps)
         
-        # Add the flow panel to the form
-        self.add_component(self.flow_panel_inputs)
+        # Add the column panel to the form
+        self.add_component(self.column_panel_inputs)
 
         # "Start Try-On" Button
         self.button_start = Button(text="Start Try-On", background="#2196F3", foreground="#FFFFFF")
