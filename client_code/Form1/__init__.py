@@ -26,10 +26,33 @@ class Form1(Form1Template):
             #open_form('LoginForm')
            # return
             
-        # Set up the form
         self.init_components(**properties)
-
-        # Set up logout button
+        
+        # Create header panel
+        self.flow_panel_header = FlowPanel(
+            align="right",
+            width="100%",
+            background="theme:primary",
+            padding=10
+        )
+        
+        # Create logout button
+        self.button_logout = Button(
+            text="Logout",
+            icon="fa:sign-out",
+            role="secondary-color",
+            font_size=14,
+            padding=8
+        )
+        self.button_logout.set_event_handler('click', self.button_logout_click)
+        
+        # Add button to panel
+        self.flow_panel_header.add_component(self.button_logout)
+        
+        # Add panel to form (at the top)
+        self.add_component(self.flow_panel_header, index=0)  # index=0 puts it at the top
+        
+        # Set up logout button text
         self.setup_logout_button()
 
         # Title
@@ -90,15 +113,17 @@ class Form1(Form1Template):
         self.fetch_url = None
 
     def setup_logout_button(self):
-        # Get current user's email
         current_user = anvil.users.get_user()
         user_email = current_user['email'] if current_user else ''
-        
-        # Update logout button text
         self.button_logout.text = f"Logout ({user_email})"
-        
-        # Make sure it's visible
-        self.button_logout.visible = True
+    
+    def button_logout_click(self, **event_args):
+        """This method is called when the logout button is clicked"""
+        try:
+            anvil.users.logout()
+            open_form('LoginForm')
+        except:
+            alert("Logout failed. Please try again.")
 
     def file_loader_user_change(self, file, **event_args):
         """
@@ -251,11 +276,3 @@ class Form1(Form1Template):
             self.label_status.text = "Error"
             self.timer_poll.enabled = False
             self.fetch_url = None
-
-    def button_logout_click(self, **event_args):
-        """This method is called when the logout button is clicked"""
-        try:
-            anvil.users.logout()
-            open_form('LoginForm')
-        except:
-            alert("Logout failed. Please try again.")
