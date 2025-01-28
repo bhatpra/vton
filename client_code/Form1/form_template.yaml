@@ -12,3 +12,20 @@ container:
   properties: {html: '@theme:standard-page.html'}
   type: HtmlTemplate
 is_package: true
+
+FlowPanel (at top of form):
+  - Name: "flow_panel_header"
+  - Align: "right"
+  - Background: "theme:primary" 
+  - Width: "100%"
+  - Properties:
+      - Padding: 10px
+      
+Button (inside FlowPanel):
+  - Name: "button_logout"
+  - Text: "Logout"
+  - Role: "secondary-color"
+  - Icon: "fa:sign-out" 
+  - Properties:
+      - Font size: 14
+      - Padding: 8px

@@ -29,6 +29,9 @@ class Form1(Form1Template):
         # Set up the form
         self.init_components(**properties)
 
+        # Set up logout button
+        self.setup_logout_button()
+
         # Title
         self.label_title = Label(
             text="EZ Apparel Try On Demo v0.27",
@@ -85,6 +88,17 @@ class Form1(Form1Template):
         self.user_media = None
         self.cloth_media = None
         self.fetch_url = None
+
+    def setup_logout_button(self):
+        # Get current user's email
+        current_user = anvil.users.get_user()
+        user_email = current_user['email'] if current_user else ''
+        
+        # Update logout button text
+        self.button_logout.text = f"Logout ({user_email})"
+        
+        # Make sure it's visible
+        self.button_logout.visible = True
 
     def file_loader_user_change(self, file, **event_args):
         """
@@ -239,5 +253,9 @@ class Form1(Form1Template):
             self.fetch_url = None
 
     def button_logout_click(self, **event_args):
-        anvil.users.logout()
-        open_form('LoginForm')
+        """This method is called when the logout button is clicked"""
+        try:
+            anvil.users.logout()
+            open_form('LoginForm')
+        except:
+            alert("Logout failed. Please try again.")
