@@ -129,7 +129,9 @@ class Form1(Form1Template):
             print("Logout successful")  # Debug print
             
             # Add a small delay before form transition
-            anvil.js.window.setTimeout(lambda: open_form('LoginForm'), 100)
+            #anvil.js.window.setTimeout(lambda: open_form('LoginForm'), 100)
+            anvil.js.window.setTimeout(lambda: open_form('Form1'), 100)
+
             
         except Exception as e:
             print(f"Logout error: {str(e)}")  # Debug print
