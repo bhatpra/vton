@@ -108,8 +108,6 @@ class Form1(Form1Template):
         )
         self.add_component(self.label_title)
 
-
-
         # Add guidance scale input
         self.text_box_guidance = TextBox(
             placeholder="Guidance Scale (default: 10)",
@@ -225,7 +223,9 @@ class Form1(Form1Template):
         self.column_panel_inputs.add_component(self.file_loader_user)
 
         self.image_user_preview = Image(width=200, height=200, align="center")
+        self.image_user_preview.visible = False
         self.column_panel_inputs.add_component(self.image_user_preview)
+   
 
         # FileLoader for cloth image
         self.file_loader_cloth = FileLoader(text="Upload Cloth Photo")
@@ -233,6 +233,7 @@ class Form1(Form1Template):
         self.column_panel_inputs.add_component(self.file_loader_cloth)
 
         self.image_cloth_preview = Image(width=200, height=200, align="center")
+        self.image_cloth_preview.visible = False
         self.column_panel_inputs.add_component(self.image_cloth_preview)
         
         self.column_panel_inputs.add_component(self.prompt_header)
@@ -340,6 +341,7 @@ class Form1(Form1Template):
 
                 self.user_media = compressed_media
                 self.image_user_preview.source = compressed_media
+                self.image_user_preview.visible = True
                 print(f"Compressed user image size: {len(raw_bytes)} bytes")
 
             def on_error(err):
@@ -387,6 +389,7 @@ class Form1(Form1Template):
 
                 self.cloth_media = compressed_media
                 self.image_cloth_preview.source = compressed_media
+                self.image_cloth_preview.visible = True                
                 print(f"Compressed cloth image size: {len(raw_bytes)} bytes")
 
             def on_error(err):
