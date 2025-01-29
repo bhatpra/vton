@@ -41,6 +41,7 @@ runtime_options:
   server_spec: {base: python310-machine-learning}
   server_version: python3-sandbox
   version: 2
+scheduled_tasks: []
 services:
 - client_config: {}
   server_config: {}
