@@ -47,9 +47,10 @@ class Form1(Form1Template):
             
         self.init_components(**properties)
         
+        
         # Add help text at the top
         self.help_label = Label(
-            text="1. Upload your photo\n2. Upload clothing item\n3. Select clothing type\n4. Add optional prompts\n5. Click Start",
+            text="1. Upload your photo\n2. Upload clothing item\n3. Select clothing type\n4. Add optional prompts\n5. Click Start\n(Scroll down if needed)",
             role="body",
             spacing_below="small"
         )
