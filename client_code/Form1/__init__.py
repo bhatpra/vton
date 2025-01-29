@@ -53,7 +53,6 @@ class Form1(Form1Template):
             role="body",
             spacing_below="small"
         )
-        self.label_title.spacing_above = "none"
         self.column_panel_inputs.add_component(self.help_label)
         
         # Create section headers
