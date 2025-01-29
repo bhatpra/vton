@@ -160,17 +160,38 @@ class Form1(Form1Template):
             if component.parent:
                 component.remove_from_parent()
         
-        # Add components with labels to the panel
+        # Create an expandable panel for advanced options
+        self.advanced_panel = ExpansionPanel(
+            text="Advanced Options",
+            collapsed=True,  # Start collapsed
+            spacing_above="small",
+            spacing_below="small"
+        )
+        
+        # Create a column panel inside expansion panel for advanced options
+        self.advanced_column = ColumnPanel(
+            spacing_above="small",
+            spacing_below="small"
+        )
+        
+        # Add advanced options to their panel
+        self.advanced_column.add_component(labels['guidance'])
+        self.advanced_column.add_component(self.text_box_guidance)
+        self.advanced_column.add_component(labels['steps'])
+        self.advanced_column.add_component(self.dropdown_steps)
+        
+        # Add components to main panel in the desired order
         self.column_panel_inputs.add_component(labels['prompt'])
         self.column_panel_inputs.add_component(self.text_box_prompt)
         self.column_panel_inputs.add_component(labels['negative'])
         self.column_panel_inputs.add_component(self.text_box_negative_prompt)
+        
+        # Cloth type right after cloth display
         self.column_panel_inputs.add_component(labels['cloth_type'])
         self.column_panel_inputs.add_component(self.dropdown_cloth_type)
-        self.column_panel_inputs.add_component(labels['guidance'])
-        self.column_panel_inputs.add_component(self.text_box_guidance)
-        self.column_panel_inputs.add_component(labels['steps'])
-        self.column_panel_inputs.add_component(self.dropdown_steps)
+        
+        # Add the expandable advanced options panel
+        self.column_panel_inputs.add_component(self.advanced_panel)
         
         # Add the panel to the form
         self.add_component(self.column_panel_inputs)
