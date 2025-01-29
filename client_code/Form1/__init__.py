@@ -1,3 +1,9 @@
+"""
+Main form for the Virtual Try-On application.
+Handles image uploads, parameter configuration, and try-on process.
+Uses ModelsLab API for virtual clothing try-on functionality.
+"""
+
 from ._anvil_designer import Form1Template
 from anvil import *
 import anvil.microsoft.auth
@@ -15,8 +21,20 @@ import time
 import anvil.users
 
 class Form1(Form1Template):
+    """
+    Main form class that handles the virtual try-on interface and logic.
+    Manages user inputs, image processing, and result display.
+    Includes background state handling for mobile devices.
+    """
 
     def __init__(self, **properties):
+        """
+        Initialize the form and its components.
+        Sets up input fields, labels, and checks for any pending jobs.
+        
+        Args:
+            **properties: Form properties passed from Anvil
+        """
         # Check if user is logged in
         if not anvil.users.get_user():
           anvil.users.login_with_form()
@@ -89,27 +107,27 @@ class Form1(Form1Template):
             text="10"
         )
         
-        # Add cloth type dropdown
+        # Add cloth type dropdown with valid ModelsLab API options
         self.dropdown_cloth_type = DropDown(
             items=['upper_body', 'lower_body', 'dresses'],
-            selected_value='dresses',  # Default to dresses
+            selected_value='dresses',
             width=200
         )
         
-        # Convert numbers to strings for dropdown
+        # Add inference steps dropdown with valid API values
         self.dropdown_steps = DropDown(
-            items=[str(x) for x in [21, 31, 41]],  # Convert numbers to strings
-            selected_value="21",  # Convert default value to string
+            items=[str(x) for x in [21, 31, 41]],
+            selected_value="21",
             width=200
         )
         
-        # Create a new column panel for inputs
+        # Create input panel for form organization
         self.column_panel_inputs = ColumnPanel(
             spacing_above="small",
             spacing_below="small"
         )
         
-        # Create text box for user prompt if it doesn't exist
+        # Create prompt input fields
         if not hasattr(self, 'text_box_prompt'):
             self.text_box_prompt = TextBox(
                 placeholder="Enter your prompt here...",
@@ -118,7 +136,6 @@ class Form1(Form1Template):
                 spacing_below="small"
             )
         
-        # Create text box for negative prompt
         if not hasattr(self, 'text_box_negative_prompt'):
             self.text_box_negative_prompt = TextBox(
                 placeholder="Enter negative prompt here (what to avoid)...",
@@ -127,7 +144,7 @@ class Form1(Form1Template):
                 spacing_below="small"
             )
         
-        # Create labels for each input
+        # Create labels for input fields
         labels = {
             'prompt': Label(text="Custom Prompt:", font_size=14, bold=True),
             'negative': Label(text="Negative Prompt (what to avoid):", font_size=14, bold=True),
@@ -136,31 +153,26 @@ class Form1(Form1Template):
             'steps': Label(text="Inference Steps:", font_size=14, bold=True)
         }
         
-        # Remove components from any existing parents first
+        # Remove components from any existing parents
         for component in [self.text_box_prompt, self.text_box_negative_prompt, 
                          self.dropdown_cloth_type, self.text_box_guidance, 
                          self.dropdown_steps]:
             if component.parent:
                 component.remove_from_parent()
         
-        # Add components with labels to the column panel
-        # Each component gets its own line
+        # Add components with labels to the panel
         self.column_panel_inputs.add_component(labels['prompt'])
         self.column_panel_inputs.add_component(self.text_box_prompt)
-        
         self.column_panel_inputs.add_component(labels['negative'])
         self.column_panel_inputs.add_component(self.text_box_negative_prompt)
-        
         self.column_panel_inputs.add_component(labels['cloth_type'])
         self.column_panel_inputs.add_component(self.dropdown_cloth_type)
-        
         self.column_panel_inputs.add_component(labels['guidance'])
         self.column_panel_inputs.add_component(self.text_box_guidance)
-        
         self.column_panel_inputs.add_component(labels['steps'])
         self.column_panel_inputs.add_component(self.dropdown_steps)
         
-        # Add the column panel to the form
+        # Add the panel to the form
         self.add_component(self.column_panel_inputs)
 
         # "Start Try-On" Button
@@ -187,7 +199,7 @@ class Form1(Form1Template):
         self.cloth_media = None
         self.fetch_url = None
 
-        # Check for any pending jobs on startup
+        # Check for any pending jobs from previous sessions
         stored_url = anvil.js.window.localStorage.getItem('pending_job_url')
         if stored_url:
             self.fetch_url = stored_url
@@ -313,6 +325,14 @@ class Form1(Form1Template):
             alert("Could not find the cloth file input. No file selected?")
 
     def button_start_click(self, **event_args):
+        """
+        Handle the start button click event.
+        Validates inputs, starts the try-on process, and manages job state.
+        
+        Args:
+            **event_args: Event arguments from Anvil
+        """
+        # Validate image uploads
         if not self.user_media or not self.cloth_media:
             alert("Please upload both user and cloth images first.")
             return
@@ -351,13 +371,14 @@ class Form1(Form1Template):
                 self.image_result.source = result["image"]
                 self.label_status.text = "Done!"
                 self.button_start.enabled = True
-                anvil.js.window.localStorage.removeItem('pending_job_url')  # Clear stored URL
+                anvil.js.window.localStorage.removeItem('pending_job_url')
+                self.fetch_url = None
             elif result["status"] == "processing":
                 self.fetch_url = result["fetch_url"]
                 eta = result.get("eta", 10)
                 self.label_status.text = f"Submitted job, still processing... ETA ~{eta} seconds."
                 self.timer_poll.enabled = True
-                anvil.js.window.localStorage.setItem('pending_job_url', result["fetch_url"])  # Store URL
+                anvil.js.window.localStorage.setItem('pending_job_url', result["fetch_url"])
             else:
                 alert(f"Unexpected status: {result}")
         except Exception as e:
@@ -368,6 +389,14 @@ class Form1(Form1Template):
         anvil.js.window.scrollTo(0, anvil.js.window.document.body.scrollHeight)
 
     def timer_poll_tick(self, **event_args):
+        """
+        Poll for job completion status.
+        Handles success, failure, and updates UI accordingly.
+        Manages background state persistence.
+        
+        Args:
+            **event_args: Event arguments from Anvil
+        """
         if not self.fetch_url:
             self.timer_poll.enabled = False
             return
@@ -380,7 +409,8 @@ class Form1(Form1Template):
                 self.label_status.text = "Done!"
                 self.timer_poll.enabled = False
                 self.button_start.enabled = True
-                anvil.js.window.localStorage.removeItem('pending_job_url')  # Clear stored URL
+                anvil.js.window.localStorage.removeItem('pending_job_url')
+                self.fetch_url = None
             elif check_result["status"] == "processing":
                 eta = check_result.get("eta", 10)
                 self.label_status.text = f"Still processing... Next check in 3s. (ETA ~{eta}s)"
@@ -388,16 +418,19 @@ class Form1(Form1Template):
                 self.label_status.text = "Failed: " + check_result.get("error", "Unknown error")
                 self.timer_poll.enabled = False
                 self.button_start.enabled = True
-                anvil.js.window.localStorage.removeItem('pending_job_url')  # Clear stored URL
+                anvil.js.window.localStorage.removeItem('pending_job_url')
+                self.fetch_url = None
             else:
                 alert(f"Unexpected status: {check_result}")
                 self.label_status.text = "Error"
                 self.timer_poll.enabled = False
                 self.button_start.enabled = True
-                anvil.js.window.localStorage.removeItem('pending_job_url')  # Clear stored URL
+                anvil.js.window.localStorage.removeItem('pending_job_url')
+                self.fetch_url = None
         except Exception as e:
             alert(f"Error polling job status: {e}")
             self.label_status.text = "Error"
             self.timer_poll.enabled = False
             self.button_start.enabled = True
-            anvil.js.window.localStorage.removeItem('pending_job_url')  # Clear stored URL
+            anvil.js.window.localStorage.removeItem('pending_job_url')
+            self.fetch_url = None
