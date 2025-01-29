@@ -162,25 +162,25 @@ class Form1(Form1Template):
             if component.parent:
                 component.remove_from_parent()
         
-        # Create an expandable panel for advanced options
-        self.advanced_panel = XPanel(
-            title="Advanced Options",
-            collapsed=True,  # Start collapsed
-            spacing_above="small",
-            spacing_below="small"
+        # Create a button to toggle advanced options
+        self.advanced_toggle = Button(
+            text="Show Advanced Options ▼",
+            role="outline-secondary",
+            spacing_above="small"
         )
         
-        # Create a column panel inside expansion panel for advanced options
-        self.advanced_column = ColumnPanel(
+        # Create a container for advanced options
+        self.advanced_panel = Container(
+            visible=False,  # Start hidden
             spacing_above="small",
             spacing_below="small"
         )
         
         # Add advanced options to their panel
-        self.advanced_column.add_component(labels['guidance'])
-        self.advanced_column.add_component(self.text_box_guidance)
-        self.advanced_column.add_component(labels['steps'])
-        self.advanced_column.add_component(self.dropdown_steps)
+        self.advanced_panel.add_component(labels['guidance'])
+        self.advanced_panel.add_component(self.text_box_guidance)
+        self.advanced_panel.add_component(labels['steps'])
+        self.advanced_panel.add_component(self.dropdown_steps)
         
         # Add components to main panel in the desired order
         self.column_panel_inputs.add_component(labels['prompt'])
@@ -192,7 +192,8 @@ class Form1(Form1Template):
         self.column_panel_inputs.add_component(labels['cloth_type'])
         self.column_panel_inputs.add_component(self.dropdown_cloth_type)
         
-        # Add the expandable advanced options panel
+        # Add the toggle button and advanced panel
+        self.column_panel_inputs.add_component(self.advanced_toggle)
         self.column_panel_inputs.add_component(self.advanced_panel)
         
         # Add the panel to the form
@@ -457,3 +458,8 @@ class Form1(Form1Template):
             self.button_start.enabled = True
             anvil.js.window.localStorage.removeItem('pending_job_url')
             self.fetch_url = None
+
+    def advanced_toggle_click(self, **event_args):
+        """Toggle visibility of advanced options"""
+        self.advanced_panel.visible = not self.advanced_panel.visible
+        self.advanced_toggle.text = "Hide Advanced Options ▲" if self.advanced_panel.visible else "Show Advanced Options ▼"
