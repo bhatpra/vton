@@ -47,12 +47,14 @@ class Form1(Form1Template):
         self.init_components(**properties)
         self.connection_retries = 0  # Initialize retry counter
         
-        # Add help text at the top
+        # Add help text at the top with privacy options
         self.help_label = Label(
-            text="1. Upload your photo\n2. Upload clothing item\n3. Select clothing type\n4. Add optional prompts\n5. Click Start\n(Scroll down if needed)",
+            text="How to use:\n1. Upload your full body photo\n2. Upload clothing item you want to try\n3. Select clothing type (dress/top/bottom)\n4. Add optional prompts to customize\n5. Scroll down and click Start\n\nPrivacy: Your photos and generated images are automatically deleted after 24 hours. You can also delete them immediately after trying on.",
             role="body",
             spacing_below="small"
         )
+        self.label_title.spacing_above = "none"
+        self.column_panel_inputs.add_component(self.help_label)
         
         # Create section headers
         self.upload_header = Label(
@@ -217,7 +219,6 @@ class Form1(Form1Template):
         self.advanced_panel.add_component(self.dropdown_steps)
         
         # Add components to main panel in the desired order
-        self.column_panel_inputs.add_component(self.help_label)
         self.column_panel_inputs.add_component(self.upload_header)
                 # FileLoader for user image
         self.file_loader_user = FileLoader(text="Upload User Photo")
@@ -273,6 +274,15 @@ class Form1(Form1Template):
         # Final result image
         self.image_result = Image(width=400, height=400, align="center")
         self.add_component(self.image_result)
+
+        # Add delete button next to result image
+        self.delete_button = Button(
+            text="Delete My Images",
+            icon="fa:trash",
+            role="danger-outline",
+            visible=False  # Only show after generation
+        )
+        self.delete_button.set_event_handler('click', self.delete_images_click)
 
         # Store media & fetch_url
         self.user_media = None
@@ -453,14 +463,16 @@ class Form1(Form1Template):
                 self.image_result.source = result["image"]
                 self.label_status.text = "Done!"
                 self.button_start.enabled = True
-                anvil.js.window.localStorage.removeItem('pending_job_url')
-                self.fetch_url = None
+                # Store request_id for later deletion
+                anvil.js.window.localStorage.setItem('request_id', result.get("request_id"))
             elif result["status"] == "processing":
                 self.fetch_url = result["fetch_url"]
                 eta = result.get("eta", 10)
                 self.label_status.text = f"Submitted job, still processing... ETA ~{eta} seconds."
                 self.timer_poll.enabled = True
-                anvil.js.window.localStorage.setItem('pending_job_url', result["fetch_url"])
+                # Store request_id for later deletion
+                if "request_id" in result:
+                    anvil.js.window.localStorage.setItem('request_id', result["request_id"])
             else:
                 alert(f"Unexpected status: {result}")
         except Exception as e:
@@ -527,3 +539,21 @@ class Form1(Form1Template):
         """Toggle visibility of advanced options"""
         self.advanced_panel.visible = not self.advanced_panel.visible
         self.advanced_toggle.text = "Hide Advanced Options ▲" if self.advanced_panel.visible else "Show Advanced Options ▼"
+
+    def delete_images_click(self, **event_args):
+        """Handle immediate deletion of images"""
+        try:
+            # Get the request_id from the database
+            request_id = app_tables.try_on_jobs.get(
+                created=q.maximum()  # Get most recent job
+            )["request_id"]
+            
+            # Call server to delete images
+            anvil.server.call('delete_images_now', request_id)
+            
+            # Clear the result image
+            self.image_result.source = None
+            self.delete_button.visible = False
+            alert("Your images have been deleted.")
+        except Exception as e:
+            alert("Failed to delete images. Please try again.")

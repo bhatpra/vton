@@ -15,6 +15,8 @@ import io
 import base64
 from PIL import Image
 import anvil.users
+from datetime import datetime, timedelta
+import schedule
 
 API_URL = "https://modelslab.com/api/v6/image_editing/fashion"
 CROP_API_URL = "https://modelslab.com/api/v3/base64_crop"
@@ -73,7 +75,7 @@ def upload_to_sd(file_path):
 # Two-step approach
 # -------------
 @anvil.server.callable
-def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", guidance_scale=10.0, num_steps=21, negative_prompt=""):
+def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guidance_scale=10.0, num_steps=21, negative_prompt=""):
     """
     1) Save images locally
     2) Upload them to the 'SD crop' endpoint => get URLs
@@ -83,9 +85,9 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
        - { "status": "processing", "fetch_url": <the fetch URL> } if we must poll
     
     Args:
-        user_media: The user's image
-        cloth_media: The clothing image
-        user_prompt: Optional user-provided prompt to append to base prompt
+        user_image: The user's image
+        cloth_image: The clothing image
+        prompt: Optional user-provided prompt to append to base prompt
         cloth_type: The type of clothing
         guidance_scale: The guidance scale for the Stable Diffusion model
         num_steps: The number of inference steps for the Stable Diffusion model
@@ -99,9 +101,9 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
     model_path = "model_image.jpg"
     cloth_path = "cloth_image.jpg"
     with open(model_path, "wb") as f:
-        f.write(user_media.get_bytes())
+        f.write(user_image.get_bytes())
     with open(cloth_path, "wb") as f:
-        f.write(cloth_media.get_bytes())
+        f.write(cloth_image.get_bytes())
 
     # Upload to stable diffusion
     model_url = upload_to_sd(model_path)
@@ -109,7 +111,7 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
 
     # Build payload for the main API
     base_prompt = "A realistic photo of the model wearing the cloth, Maintain color and texture"
-    final_prompt = f"{base_prompt}, {user_prompt}".strip()
+    final_prompt = f"{base_prompt}, {prompt}".strip()
     
     # Combine default negative prompt with user's negative prompt
     base_negative = "Low quality, unrealistic, warped cloth, cloth's hand length should not change"
@@ -155,6 +157,11 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
             raise Exception("No final image link found in response!")
         # Download & return it
         final_image = get_image_as_media(final_url)
+        # Store just the request_id and creation time
+        app_tables.try_on_jobs.add_row(
+            request_id=data["request_id"],
+            created=datetime.now()
+        )
         return {"status": "success", "image": final_image}
 
     elif status == "processing":
@@ -210,3 +217,91 @@ def save_user_preferences(preferences):
     
     # Save to user's row in the Users table
     user['preferences'] = preferences
+
+@anvil.server.background_task
+def cleanup_old_images():
+    """Delete images older than 24 hours"""
+    cutoff_time = datetime.now() - timedelta(hours=24)
+    
+    # Delete from stable diffusion
+    try:
+        # Call SD API to delete old images
+        delete_from_sd(cutoff_time)
+    except Exception as e:
+        print(f"Error deleting from SD: {str(e)}")
+    
+    # Delete from our storage
+    try:
+        # Delete from Media table
+        app_tables.media.delete_where(
+            tables.order_by("created", ascending=True),
+            created=q.less_than(cutoff_time)
+        )
+    except Exception as e:
+        print(f"Error deleting from storage: {str(e)}")
+
+# Schedule cleanup to run daily
+schedule.every(24).hours.do(cleanup_old_images)
+
+# Start the scheduler
+@anvil.server.background_task
+def run_scheduler():
+    while True:
+        schedule.run_pending()
+        time.sleep(3600)  # Check every hour
+
+# Start scheduler when server starts
+anvil.server.call('run_scheduler')
+
+def delete_from_sd(cutoff_time):
+    """Delete images from Stable Diffusion API older than cutoff time"""
+    try:
+        # Get the API endpoint for deletion
+        api_url = "https://stablediffusionapi.com/api/v4/delete"
+        
+        # Call the API to delete old images
+        response = anvil.http.request(
+            api_url,
+            method="POST",
+            json={
+                "key": app_secrets.sd_api_key,
+                "timestamp": cutoff_time.timestamp()
+            },
+            headers={'Content-Type': 'application/json'}
+        )
+        
+        if response.get('status') == 'success':
+            print(f"Successfully deleted images before {cutoff_time}")
+        else:
+            print(f"Error from SD API: {response.get('error', 'Unknown error')}")
+            
+    except Exception as e:
+        print(f"Failed to delete from SD: {str(e)}")
+        raise
+
+@anvil.server.callable
+def delete_images_now(request_id):
+    """Immediately delete user images"""
+    try:
+        # Call ModelsLab delete API
+        response = anvil.http.request(
+            "https://modelslab.com/api/v3/delete_image",
+            method="POST",
+            json={
+                "key": app_secrets.modelslab_api_key,
+                "request_id": request_id
+            }
+        )
+        
+        if response.get('status') == 'success':
+            # Delete from our database
+            job = app_tables.try_on_jobs.get(request_id=request_id)
+            if job:
+                job.delete()
+            return True
+        else:
+            raise Exception("Failed to delete from ModelsLab")
+            
+    except Exception as e:
+        print(f"Failed to delete images: {str(e)}")
+        raise
