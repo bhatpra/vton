@@ -187,6 +187,13 @@ class Form1(Form1Template):
         self.cloth_media = None
         self.fetch_url = None
 
+        # Check for any pending jobs on startup
+        stored_url = anvil.js.window.localStorage.getItem('pending_job_url')
+        if stored_url:
+            self.fetch_url = stored_url
+            self.label_status.text = "Processing..."
+            self.timer_poll.enabled = True
+
     def setup_logout_button(self):
         current_user = anvil.users.get_user()
         user_email = current_user['email'] if current_user else ''
@@ -344,11 +351,13 @@ class Form1(Form1Template):
                 self.image_result.source = result["image"]
                 self.label_status.text = "Done!"
                 self.button_start.enabled = True
+                anvil.js.window.localStorage.removeItem('pending_job_url')  # Clear stored URL
             elif result["status"] == "processing":
                 self.fetch_url = result["fetch_url"]
                 eta = result.get("eta", 10)
                 self.label_status.text = f"Submitted job, still processing... ETA ~{eta} seconds."
                 self.timer_poll.enabled = True
+                anvil.js.window.localStorage.setItem('pending_job_url', result["fetch_url"])  # Store URL
             else:
                 alert(f"Unexpected status: {result}")
         except Exception as e:
@@ -370,17 +379,25 @@ class Form1(Form1Template):
                 self.image_result.source = check_result["image"]
                 self.label_status.text = "Done!"
                 self.timer_poll.enabled = False
-                self.fetch_url = None
+                self.button_start.enabled = True
+                anvil.js.window.localStorage.removeItem('pending_job_url')  # Clear stored URL
             elif check_result["status"] == "processing":
                 eta = check_result.get("eta", 10)
                 self.label_status.text = f"Still processing... Next check in 3s. (ETA ~{eta}s)"
+            elif check_result["status"] == "failed":
+                self.label_status.text = "Failed: " + check_result.get("error", "Unknown error")
+                self.timer_poll.enabled = False
+                self.button_start.enabled = True
+                anvil.js.window.localStorage.removeItem('pending_job_url')  # Clear stored URL
             else:
                 alert(f"Unexpected status: {check_result}")
                 self.label_status.text = "Error"
                 self.timer_poll.enabled = False
-                self.fetch_url = None
+                self.button_start.enabled = True
+                anvil.js.window.localStorage.removeItem('pending_job_url')  # Clear stored URL
         except Exception as e:
             alert(f"Error polling job status: {e}")
             self.label_status.text = "Error"
             self.timer_poll.enabled = False
-            self.fetch_url = None
+            self.button_start.enabled = True
+            anvil.js.window.localStorage.removeItem('pending_job_url')  # Clear stored URL
