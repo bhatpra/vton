@@ -101,7 +101,7 @@ class Form1(Form1Template):
 
         # Title
         self.label_title = Label(
-            text="EZTry.AI : Easy Latest AI Powered Apparel Tr-On Demo v0.29",
+            text="EZTry.AI : Easy Latest AI Powered \nApparel Try-On Demo \nversion 0.29",
             align="center",
             font_size=20,
             bold=True
