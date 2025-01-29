@@ -19,8 +19,7 @@ import anvil.server
 import anvil.js
 import base64
 import time
-import anvil.users
-from anvil import Button, TextBox, Label, DropDown, ColumnPanel, XPanel
+from anvil import Button, TextBox, Label, DropDown, ColumnPanel
 
 class Form1(Form1Template):
     """
@@ -162,16 +161,16 @@ class Form1(Form1Template):
             if component.parent:
                 component.remove_from_parent()
         
-        # Create a button to toggle advanced options
-        self.advanced_toggle = Button(
-            text="Show Advanced Options ▼",
-            role="outline-secondary",
+        # Create toggle link for advanced options
+        self.advanced_toggle = Link(
+            text="▼ Show Advanced Options",
             spacing_above="small"
         )
+        self.advanced_toggle.set_event_handler('click', self.advanced_toggle_click)
         
-        # Create a container for advanced options
-        self.advanced_panel = Container(
-            visible=False,  # Start hidden
+        # Create panel for advanced options
+        self.advanced_panel = ColumnPanel(
+            visible=False,
             spacing_above="small",
             spacing_below="small"
         )
