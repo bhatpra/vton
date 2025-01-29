@@ -47,13 +47,7 @@ class Form1(Form1Template):
         self.init_components(**properties)
         self.connection_retries = 0  # Initialize retry counter
         
-        # Add help text at the top with privacy options
-        self.help_label = Label(
-            text="How to use:\n1. Upload your full body photo\n2. Upload clothing item you want to try\n3. Select clothing type (dress/top/bottom)\n4. Add optional prompts to customize\n5. Scroll down and click Start\n\nPrivacy: Your photos and generated images are automatically deleted after 24 hours. You can also delete them immediately after trying on.",
-            role="body",
-            spacing_below="small"
-        )
-        self.add_component(self.help_label)
+
         
         # Create section headers
         self.upload_header = Label(
@@ -102,15 +96,25 @@ class Form1(Form1Template):
 
         # Title
         self.label_title = Label(
-            text="EZTry.AI : AI Powered \nApparel Try-On WebApp \nversion 0.29",
+            text="EZTry.AI : AI Based Apparel Try-On App : version 0.29",
             align="center",
             font_size=20,
             bold=True,
-            spacing_above="small"
+            spacing_above="none",
+            spacing_below="none"
+
         )
-        self.label_title.spacing_above = "none"
+        #self.label_title.spacing_above = "none"
         #self.label_title.spacing_above = "small"
         self.add_component(self.label_title)
+
+        # Add help text at the top with privacy options
+        self.help_label = Label(
+            text="How to use:\n1. Upload your full body photo\n2. Upload clothing item you want to try\n3. Select clothing type (dress/top/bottom)\n4. Add optional prompts to customize\n5. Scroll down and click Start\n\nPrivacy: Your photos and generated images are automatically deleted after 24 hours. You can also delete them immediately after trying on.",
+            role="body",
+            spacing_below="small"
+        )
+        self.add_component(self.help_label)
 
         # Add guidance scale input
         self.text_box_guidance = TextBox(
