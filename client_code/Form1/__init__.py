@@ -6,6 +6,7 @@ Uses ModelsLab API for virtual clothing try-on functionality.
 
 from ._anvil_designer import Form1Template
 from anvil import *
+from anvil.js.window import jQuery
 import anvil.microsoft.auth
 import anvil.facebook.auth
 import anvil.google.auth, anvil.google.drive
@@ -19,6 +20,7 @@ import anvil.js
 import base64
 import time
 import anvil.users
+from anvil import Button, TextBox, Label, DropDown, ColumnPanel, ExpansionPanel
 
 class Form1(Form1Template):
     """
