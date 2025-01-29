@@ -313,7 +313,7 @@ class Form1(Form1Template):
         # Get all input values
         cloth_type = self.dropdown_cloth_type.selected_value
         user_prompt = self.text_box_prompt.text
-        negative_prompt = self.text_box_negative_prompt.text  # Get negative prompt from text box
+        negative_prompt = self.text_box_negative_prompt.text
         num_steps = int(self.dropdown_steps.selected_value)
         
         try:
@@ -332,7 +332,7 @@ class Form1(Form1Template):
                                  cloth_type,
                                  guidance_scale,
                                  num_steps,
-                                 negative_prompt)  # Pass the negative prompt
+                                 negative_prompt)
         
         # Clear old result
         self.image_result.source = None
@@ -342,7 +342,8 @@ class Form1(Form1Template):
         try:
             if result["status"] == "success":
                 self.image_result.source = result["image"]
-                self.label_status.text = "Done! (Instant result)"
+                self.label_status.text = "Done!"
+                self.button_start.enabled = True
             elif result["status"] == "processing":
                 self.fetch_url = result["fetch_url"]
                 eta = result.get("eta", 10)
@@ -353,6 +354,9 @@ class Form1(Form1Template):
         except Exception as e:
             alert(f"Error submitting job: {e}")
             self.label_status.text = "Error"
+
+        # Add just this one line to scroll to bottom
+        anvil.js.window.scrollTo(0, anvil.js.window.document.body.scrollHeight)
 
     def timer_poll_tick(self, **event_args):
         if not self.fetch_url:
