@@ -20,7 +20,7 @@ import anvil.js
 import base64
 import time
 import anvil.users
-from anvil import Button, TextBox, Label, DropDown, ColumnPanel, ExpansionPanel
+from anvil import Button, TextBox, Label, DropDown, ColumnPanel, XPanel
 
 class Form1(Form1Template):
     """
@@ -163,8 +163,8 @@ class Form1(Form1Template):
                 component.remove_from_parent()
         
         # Create an expandable panel for advanced options
-        self.advanced_panel = ExpansionPanel(
-            text="Advanced Options",
+        self.advanced_panel = XPanel(
+            title="Advanced Options",
             collapsed=True,  # Start collapsed
             spacing_above="small",
             spacing_below="small"
