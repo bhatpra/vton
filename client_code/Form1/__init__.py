@@ -222,18 +222,18 @@ class Form1(Form1Template):
                 # FileLoader for user image
         self.file_loader_user = FileLoader(text="Upload User Photo")
         self.file_loader_user.set_event_handler("change", self.file_loader_user_change)
-        self.add_component(self.file_loader_user)
+        self.column_panel_inputs.add_component(self.file_loader_user)
 
         self.image_user_preview = Image(width=200, height=200, align="center")
-        self.add_component(self.image_user_preview)
+        self.column_panel_inputs.add_component(self.image_user_preview)
 
         # FileLoader for cloth image
         self.file_loader_cloth = FileLoader(text="Upload Cloth Photo")
         self.file_loader_cloth.set_event_handler("change", self.file_loader_cloth_change)
-        self.add_component(self.file_loader_cloth)
+        self.column_panel_inputs.add_component(self.file_loader_cloth)
 
         self.image_cloth_preview = Image(width=200, height=200, align="center")
-        self.add_component(self.image_cloth_preview)
+        self.column_panel_inputs.add_component(self.image_cloth_preview)
         
         self.column_panel_inputs.add_component(self.prompt_header)
         self.column_panel_inputs.add_component(labels['prompt'])
