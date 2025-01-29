@@ -16,7 +16,7 @@ import base64
 from PIL import Image
 import anvil.users
 from datetime import datetime, timedelta
-import schedule
+import anvil.http
 
 API_URL = "https://modelslab.com/api/v6/image_editing/fashion"
 CROP_API_URL = "https://modelslab.com/api/v3/base64_crop"
@@ -221,37 +221,42 @@ def save_user_preferences(preferences):
 @anvil.server.background_task
 def cleanup_old_images():
     """Delete images older than 24 hours"""
-    cutoff_time = datetime.now() - timedelta(hours=24)
-    
-    # Delete from stable diffusion
-    try:
-        # Call SD API to delete old images
-        delete_from_sd(cutoff_time)
-    except Exception as e:
-        print(f"Error deleting from SD: {str(e)}")
-    
-    # Delete from our storage
-    try:
-        # Delete from Media table
-        app_tables.media.delete_where(
-            tables.order_by("created", ascending=True),
-            created=q.less_than(cutoff_time)
-        )
-    except Exception as e:
-        print(f"Error deleting from storage: {str(e)}")
-
-# Schedule cleanup to run daily
-schedule.every(24).hours.do(cleanup_old_images)
-
-# Start the scheduler
-@anvil.server.background_task
-def run_scheduler():
     while True:
-        schedule.run_pending()
-        time.sleep(3600)  # Check every hour
+        try:
+            # Run every 24 hours
+            anvil.server.wait(24*60*60)  # Wait 24 hours
+            
+            # Get cutoff time
+            cutoff_time = datetime.now() - timedelta(hours=24)
+            
+            # Get jobs older than cutoff time
+            old_jobs = app_tables.try_on_jobs.search(
+                created=q.less_than(cutoff_time)
+            )
+            
+            for job in old_jobs:
+                try:
+                    # Call ModelsLab delete API
+                    response = anvil.http.request(
+                        "https://modelslab.com/api/v3/delete_image",
+                        method="POST",
+                        json={
+                            "key": app_secrets.modelslab_api_key,
+                            "request_id": job["request_id"]
+                        }
+                    )
+                    if response.get('status') == 'success':
+                        job.delete()
+                except Exception as e:
+                    print(f"Failed to delete job {job['request_id']}: {str(e)}")
+                    
+        except Exception as e:
+            print(f"Cleanup task error: {str(e)}")
+            # Wait before retrying on error
+            anvil.server.wait(3600)  # Wait 1 hour before retry
 
-# Start scheduler when server starts
-anvil.server.call('run_scheduler')
+# Start the cleanup task when server starts
+#anvil.server.launch_background_task('cleanup_old_images')
 
 def delete_from_sd(cutoff_time):
     """Delete images from Stable Diffusion API older than cutoff time"""
