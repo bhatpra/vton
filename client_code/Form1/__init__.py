@@ -47,6 +47,30 @@ class Form1(Form1Template):
             
         self.init_components(**properties)
         
+        # Add help text at the top
+        self.help_label = Label(
+            text="1. Upload your photo\n2. Upload clothing item\n3. Select clothing type\n4. Add optional prompts\n5. Click Start",
+            role="body",
+            spacing_below="large"
+        )
+        
+        # Create section headers
+        self.upload_header = Label(
+            text="📸 Upload Images", 
+            font_size=16, 
+            bold=True,
+            spacing_above="large",
+            spacing_below="small"
+        )
+        
+        self.prompt_header = Label(
+            text="✨ Customize Generation", 
+            font_size=16, 
+            bold=True,
+            spacing_above="large",
+            spacing_below="small"
+        )
+        
         # Create header panel
         self.flow_panel_header = FlowPanel(
             align="right",
@@ -77,7 +101,7 @@ class Form1(Form1Template):
 
         # Title
         self.label_title = Label(
-            text="EZ Apparel Try On Demo v0.27",
+            text="EZTry.AI : Easy Latest AI Powered Apparel Tr-On Demo v0.29",
             align="center",
             font_size=20,
             bold=True
@@ -145,13 +169,37 @@ class Form1(Form1Template):
                 spacing_below="small"
             )
         
-        # Create labels for input fields
+        # Create labels for input fields with improved descriptions
         labels = {
-            'prompt': Label(text="Custom Prompt:", font_size=14, bold=True),
-            'negative': Label(text="Negative Prompt (what to avoid):", font_size=14, bold=True),
-            'cloth_type': Label(text="Clothing Type:", font_size=14, bold=True),
-            'guidance': Label(text="Guidance Scale (1-20):", font_size=14, bold=True),
-            'steps': Label(text="Inference Steps:", font_size=14, bold=True)
+            'prompt': Label(
+                text="Customize the result (optional):", 
+                font_size=14, 
+                bold=True,
+                tooltip="Add details about how you want the result to look"
+            ),
+            'negative': Label(
+                text="Avoid these features (optional):", 
+                font_size=14, 
+                bold=True,
+                tooltip="Specify what you don't want in the result"
+            ),
+            'cloth_type': Label(
+                text="Select clothing category:", 
+                font_size=14, 
+                bold=True
+            ),
+            'guidance': Label(
+                text="AI Creativity (1-20):", 
+                font_size=14, 
+                bold=True,
+                tooltip="Higher values follow prompts more strictly"
+            ),
+            'steps': Label(
+                text="Quality Level:", 
+                font_size=14, 
+                bold=True,
+                tooltip="More steps = higher quality but slower"
+            )
         }
         
         # Remove components from any existing parents
@@ -161,10 +209,11 @@ class Form1(Form1Template):
             if component.parent:
                 component.remove_from_parent()
         
-        # Create toggle link for advanced options
+        # Update advanced options toggle
         self.advanced_toggle = Link(
-            text="▼ Show Advanced Options",
-            spacing_above="small"
+            text="⚙️ Advanced Options ▼",
+            tooltip="Adjust generation parameters",
+            spacing_above="large"
         )
         self.advanced_toggle.set_event_handler('click', self.advanced_toggle_click)
         
@@ -182,6 +231,9 @@ class Form1(Form1Template):
         self.advanced_panel.add_component(self.dropdown_steps)
         
         # Add components to main panel in the desired order
+        self.column_panel_inputs.add_component(self.help_label)
+        self.column_panel_inputs.add_component(self.upload_header)
+        self.column_panel_inputs.add_component(self.prompt_header)
         self.column_panel_inputs.add_component(labels['prompt'])
         self.column_panel_inputs.add_component(self.text_box_prompt)
         self.column_panel_inputs.add_component(labels['negative'])
