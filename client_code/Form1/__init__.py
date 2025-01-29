@@ -109,7 +109,8 @@ class Form1(Form1Template):
             bold=True,
             spacing_above="small"
         )
-        self.label_title.spacing_above = "small"
+        self.label_title.spacing_above = "none"
+        #self.label_title.spacing_above = "small"
         self.add_component(self.label_title)
 
         # Add guidance scale input
