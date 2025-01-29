@@ -6,7 +6,9 @@ Uses ModelsLab API for virtual clothing try-on functionality.
 
 from ._anvil_designer import Form1Template
 from anvil import *
-from anvil.js.window import jQuery
+import anvil.users
+import anvil.server
+import anvil.js.window
 import anvil.microsoft.auth
 import anvil.facebook.auth
 import anvil.google.auth, anvil.google.drive
@@ -14,12 +16,9 @@ from anvil.google.drive import app_files
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-import anvil.users
-import anvil.server
 import anvil.js
 import base64
 import time
-from anvil import Button, TextBox, Label, DropDown, ColumnPanel
 
 class Form1(Form1Template):
     """
@@ -46,7 +45,7 @@ class Form1(Form1Template):
            # return
             
         self.init_components(**properties)
-        
+        self.connection_retries = 0  # Initialize retry counter
         
         # Add help text at the top
         self.help_label = Label(
@@ -280,7 +279,7 @@ class Form1(Form1Template):
         self.cloth_media = None
         self.fetch_url = None
 
-        # Check for any pending jobs from previous sessions
+        # Check for any pending jobs on startup/resume
         stored_url = anvil.js.window.localStorage.getItem('pending_job_url')
         if stored_url:
             self.fetch_url = stored_url
@@ -487,6 +486,8 @@ class Form1(Form1Template):
         self.label_status.text = "Checking status..."
         try:
             check_result = anvil.server.call('check_try_on', self.fetch_url)
+            self.connection_retries = 0  # Reset counter on successful connection
+            
             if check_result["status"] == "success":
                 self.image_result.source = check_result["image"]
                 self.label_status.text = "Done!"
@@ -511,12 +512,16 @@ class Form1(Form1Template):
                 anvil.js.window.localStorage.removeItem('pending_job_url')
                 self.fetch_url = None
         except Exception as e:
-            alert(f"Error polling job status: {e}")
-            self.label_status.text = "Error"
-            self.timer_poll.enabled = False
-            self.button_start.enabled = True
-            anvil.js.window.localStorage.removeItem('pending_job_url')
-            self.fetch_url = None
+            self.connection_retries += 1
+            if self.connection_retries >= 10:  # Stop after 10 failures
+                self.label_status.text = "Connection failed. Please try again."
+                self.timer_poll.enabled = False
+                self.button_start.enabled = True
+                anvil.js.window.localStorage.removeItem('pending_job_url')
+                self.fetch_url = None
+            else:
+                self.label_status.text = f"Checking status... (Attempt {self.connection_retries}/10)"
+                print(f"Error polling job status: {str(e)}")
 
     def advanced_toggle_click(self, **event_args):
         """Toggle visibility of advanced options"""
