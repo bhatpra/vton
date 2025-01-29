@@ -53,7 +53,7 @@ class Form1(Form1Template):
             role="body",
             spacing_below="small"
         )
-        self.column_panel_inputs.add_component(self.help_label)
+        self.add_component(self.help_label)
         
         # Create section headers
         self.upload_header = Label(
