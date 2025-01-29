@@ -51,7 +51,7 @@ class Form1(Form1Template):
         self.help_label = Label(
             text="1. Upload your photo\n2. Upload clothing item\n3. Select clothing type\n4. Add optional prompts\n5. Click Start",
             role="body",
-            spacing_below="large"
+            spacing_below="small"
         )
         
         # Create section headers
@@ -104,8 +104,10 @@ class Form1(Form1Template):
             text="EZTry.AI : AI Powered \nApparel Try-On WebApp \nversion 0.29",
             align="center",
             font_size=20,
-            bold=True
+            bold=True,
+            spacing_above="small"
         )
+        self.label_title.spacing_above = "small"
         self.add_component(self.label_title)
 
         # Add guidance scale input
