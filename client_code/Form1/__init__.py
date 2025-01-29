@@ -101,28 +101,14 @@ class Form1(Form1Template):
 
         # Title
         self.label_title = Label(
-            text="EZTry.AI : Easy Latest AI Powered \nApparel Try-On Demo \nversion 0.29",
+            text="EZTry.AI : AI Powered \nApparel Try-On WebApp \nversion 0.29",
             align="center",
             font_size=20,
             bold=True
         )
         self.add_component(self.label_title)
 
-        # FileLoader for user image
-        self.file_loader_user = FileLoader(text="Upload User Photo")
-        self.file_loader_user.set_event_handler("change", self.file_loader_user_change)
-        self.add_component(self.file_loader_user)
 
-        self.image_user_preview = Image(width=200, height=200, align="center")
-        self.add_component(self.image_user_preview)
-
-        # FileLoader for cloth image
-        self.file_loader_cloth = FileLoader(text="Upload Cloth Photo")
-        self.file_loader_cloth.set_event_handler("change", self.file_loader_cloth_change)
-        self.add_component(self.file_loader_cloth)
-
-        self.image_cloth_preview = Image(width=200, height=200, align="center")
-        self.add_component(self.image_cloth_preview)
 
         # Add guidance scale input
         self.text_box_guidance = TextBox(
@@ -233,6 +219,22 @@ class Form1(Form1Template):
         # Add components to main panel in the desired order
         self.column_panel_inputs.add_component(self.help_label)
         self.column_panel_inputs.add_component(self.upload_header)
+                # FileLoader for user image
+        self.file_loader_user = FileLoader(text="Upload User Photo")
+        self.file_loader_user.set_event_handler("change", self.file_loader_user_change)
+        self.add_component(self.file_loader_user)
+
+        self.image_user_preview = Image(width=200, height=200, align="center")
+        self.add_component(self.image_user_preview)
+
+        # FileLoader for cloth image
+        self.file_loader_cloth = FileLoader(text="Upload Cloth Photo")
+        self.file_loader_cloth.set_event_handler("change", self.file_loader_cloth_change)
+        self.add_component(self.file_loader_cloth)
+
+        self.image_cloth_preview = Image(width=200, height=200, align="center")
+        self.add_component(self.image_cloth_preview)
+        
         self.column_panel_inputs.add_component(self.prompt_header)
         self.column_panel_inputs.add_component(labels['prompt'])
         self.column_panel_inputs.add_component(self.text_box_prompt)
