@@ -108,11 +108,11 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
     cloth_url = upload_to_sd(cloth_path)
 
     # Build payload for the main API
-    base_prompt = "A realistic photo of the model wearing the cloth. Maintain color and texture"
+    base_prompt = "A realistic photo of the model wearing the cloth, Maintain color and texture"
     final_prompt = f"{base_prompt}, {user_prompt}".strip()
     
     # Combine default negative prompt with user's negative prompt
-    base_negative = "Low quality, unrealistic, warped cloth"
+    base_negative = "Low quality, unrealistic, warped cloth, cloth's hand length should not change"
     final_negative = f"{base_negative}, {negative_prompt}".strip()
     
     payload = json.dumps({
