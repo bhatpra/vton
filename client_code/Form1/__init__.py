@@ -560,4 +560,5 @@ class Form1(Form1Template):
             self.delete_button.visible = False
             alert("Your images have been deleted.")
         except Exception as e:
-            alert("Failed to delete images. Please try again.Exception:"+e)
+            alert("Failed to delete images. Please try again.Exception:"+str(e))
+            print(e)
