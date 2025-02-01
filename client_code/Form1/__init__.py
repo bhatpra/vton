@@ -469,18 +469,13 @@ class Form1(Form1Template):
                 self.label_status.text = "Done!"
                 self.button_start.enabled = True
                 self.delete_button.visible = True
-                # Store request_id for later deletion
-                anvil.js.window.localStorage.setItem('request_id', result.get("request_id"))
-            elif result["status"] == "processing":
+                print(f"Success request_id: {result.get('request_id')}")  # Debug: Check request_id on success
+            else:
                 self.fetch_url = result["fetch_url"]
                 eta = result.get("eta", 10)
                 self.label_status.text = f"Submitted job, still processing... ETA ~{eta} seconds."
                 self.timer_poll.enabled = True
-                # Store request_id for later deletion
-                if "request_id" in result:
-                    anvil.js.window.localStorage.setItem('request_id', result["request_id"])
-            else:
-                alert(f"Unexpected status: {result}")
+                print(f"Processing request_id: {result.get('request_id')}")  # Debug: Check request_id while processing
         except Exception as e:
             alert(f"Error submitting job: {e}")
             self.label_status.text = "Error"
@@ -504,6 +499,8 @@ class Form1(Form1Template):
         self.label_status.text = "Checking status..."
         try:
             check_result = anvil.server.call('check_try_on', self.fetch_url)
+            print(f"Poll result: {check_result}")  # Debug: Print poll result
+            print(f"Poll request_id: {check_result.get('request_id')}")  # Debug: Check request_id from poll
             self.connection_retries = 0  # Reset counter on successful connection
             
             if check_result["status"] == "success":
@@ -563,4 +560,4 @@ class Form1(Form1Template):
             self.delete_button.visible = False
             alert("Your images have been deleted.")
         except Exception as e:
-            alert("Failed to delete images. Please try again.")
+            alert("Failed to delete images. Please try again.Exception:"+e)
