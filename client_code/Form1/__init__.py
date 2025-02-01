@@ -287,6 +287,7 @@ class Form1(Form1Template):
             visible=False  # Only show after generation
         )
         self.delete_button.set_event_handler('click', self.delete_images_click)
+        self.column_panel_inputs.add_component(self.delete_button)
 
         # Store media & fetch_url
         self.user_media = None
@@ -467,6 +468,7 @@ class Form1(Form1Template):
                 self.image_result.source = result["image"]
                 self.label_status.text = "Done!"
                 self.button_start.enabled = True
+                self.delete_button.visible = True
                 # Store request_id for later deletion
                 anvil.js.window.localStorage.setItem('request_id', result.get("request_id"))
             elif result["status"] == "processing":
@@ -507,6 +509,7 @@ class Form1(Form1Template):
             if check_result["status"] == "success":
                 self.image_result.source = check_result["image"]
                 self.label_status.text = "Done!"
+                self.delete_button.visible = True
                 self.timer_poll.enabled = False
                 self.button_start.enabled = True
                 anvil.js.window.localStorage.removeItem('pending_job_url')
