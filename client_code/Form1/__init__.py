@@ -547,18 +547,25 @@ class Form1(Form1Template):
     def delete_images_click(self, **event_args):
         """Handle immediate deletion of images"""
         try:
+            print("Starting delete process...")  # Debug
+            
             # Get the request_id from the database
-            request_id = app_tables.try_on_jobs.get(
+            job = app_tables.try_on_jobs.get(
                 created=q.maximum()  # Get most recent job
-            )["request_id"]
+            )
+            print(f"Found job: {job}")  # Debug
+            
+            request_id = job["request_id"]
+            print(f"Request ID to delete: {request_id}")  # Debug
             
             # Call server to delete images
-            anvil.server.call('delete_images_now', request_id)
+            result = anvil.server.call('delete_images_now', request_id)
+            print(f"Delete API result: {result}")  # Debug
             
             # Clear the result image
             self.image_result.source = None
             self.delete_button.visible = False
             alert("Your images have been deleted.")
         except Exception as e:
-            alert("Failed to delete images. Please try again.Exception:"+str(e))
-            print(e)
+            print(f"Delete error details: {str(e)}")  # Debug
+            alert("Failed to delete images. Please try again.")
