@@ -160,7 +160,8 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
         # Store just the request_id and creation time
         app_tables.try_on_jobs.add_row(
             request_id=data["request_id"],
-            created=datetime.now()
+            created=datetime.now(),
+            user=anvil.users.get_user()
         )
         return {"status": "success", "image": final_image}
 
@@ -288,25 +289,64 @@ def delete_from_sd(cutoff_time):
 def delete_images_now(request_id):
     """Immediately delete user images"""
     try:
-        # Call ModelsLab delete API
-        response = anvil.http.request(
-            "https://modelslab.com/api/v3/delete_image",
-            method="POST",
-            json={
-                "key": app_secrets.modelslab_api_key,
-                "request_id": request_id
-            }
+        user = anvil.users.get_user()
+        # READ: Get job for this user
+        job = app_tables.try_on_jobs.get(
+            request_id=request_id,
+            user=user  # Only get jobs belonging to this user
         )
         
-        if response.get('status') == 'success':
-            # Delete from our database
-            job = app_tables.try_on_jobs.get(request_id=request_id)
-            if job:
+        if job:
+            # Call ModelsLab delete API
+            response = anvil.http.request(
+                "https://modelslab.com/api/v3/delete_image",
+                method="POST",
+                json={
+                    "key": app_secrets.modelslab_api_key,
+                    "request_id": request_id
+                }
+            )
+            
+            if response.get('status') == 'success':
+                # Delete from our database
                 job.delete()
-            return True
-        else:
-            raise Exception("Failed to delete from ModelsLab")
+                return True
+            else:
+                raise Exception("Failed to delete from ModelsLab")
             
     except Exception as e:
         print(f"Failed to delete images: {str(e)}")
         raise
+
+# Create try_on_jobs table if it doesn't exist
+try:
+    app_tables.try_on_jobs
+except AttributeError:
+    app_tables.create_table(
+        'try_on_jobs',
+        [
+            ('request_id', str),
+            ('created', datetime),
+            ('user', str)
+        ]
+    )
+
+@anvil.server.background_task
+def upload_image(image_type, image_data):
+    """Store image in database"""
+    try:
+        # Store in appropriate table
+        if image_type == 'user':
+            return app_tables.user_images.add_row(image=image_data)
+        else:
+            return app_tables.cloth_images.add_row(image=image_data)
+    except Exception as e:
+        print(f"Error uploading {image_type} image: {str(e)}")
+        raise
+
+@anvil.server.callable
+def get_latest_user_images(user):
+    """Get the latest images for a user"""
+    user_image = app_tables.user_images.search(user=user)[-1] if app_tables.user_images.search(user=user) else None
+    cloth_image = app_tables.cloth_images.search(user=user)[-1] if app_tables.cloth_images.search(user=user) else None
+    return user_image, cloth_image

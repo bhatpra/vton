@@ -360,6 +360,14 @@ class Form1(Form1Template):
                 self.image_user_preview.source = compressed_media
                 self.image_user_preview.visible = True
                 print(f"Compressed user image size: {len(raw_bytes)} bytes")
+                try:
+                    # Start background upload
+                    #anvil.server.launch_background_task('upload_image', 'user', compressed_media)
+                    print("Uploading image in background TBD")
+
+                except Exception as e:
+                    print(f"Error uploading user image in background: {e}")
+
 
             def on_error(err):
                 alert(f"Error compressing user image: {err}")
@@ -408,6 +416,15 @@ class Form1(Form1Template):
                 self.image_cloth_preview.source = compressed_media
                 self.image_cloth_preview.visible = True                
                 print(f"Compressed cloth image size: {len(raw_bytes)} bytes")
+                try:
+                    print("Uploading image in background TBD")
+
+                    # Start background upload  
+                    #anvil.server.launch_background_task('upload_image', 'cloth', compressed_media)
+
+                except Exception as e:
+                    print(f"Error uploading cloth image in background: {e}")
+
 
             def on_error(err):
                 alert(f"Error compressing cloth image: {err}")
