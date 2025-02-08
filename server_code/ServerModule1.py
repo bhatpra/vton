@@ -98,11 +98,7 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
     if not anvil.users.get_user():
         raise Exception("Authentication required")
     
-    user = anvil.users.get_user()
-        
-        # Get latest images for this user
-    user_image_url, cloth_image_url = get_latest_user_images(user)
-        
+    user = anvil.users.get_user()               
 
 
     # Build payload for the main API
@@ -112,7 +108,7 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
     # Combine default negative prompt with user's negative prompt
     base_negative = "Low quality, unrealistic, warped cloth, cloth's hand length should not change"
     final_negative = f"{base_negative}, {negative_prompt}".strip()
-    row=app_tables.try_on_Jobs.get_row(user=anvil.users.get_user()['email'])
+    row=app_tables.try_on_jobs.get_row(user=anvil.users.get_user()['email'])
     model_url=row['user_url']
     cloth_url=row['cloth_url']
     row['updated']=datetime.now()
