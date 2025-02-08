@@ -298,7 +298,7 @@ def delete_images_now(request_id):
         user = anvil.users.get_user()
         print(f"Looking for job with request_id: {request_id}")  # Debug
         
-        # Get job for this user
+        # Get job for this user using correct method
         job = app_tables.try_on_jobs.get(
             request_id=request_id,
             user=user
@@ -319,6 +319,7 @@ def delete_images_now(request_id):
             if response.get('status') == 'success':
                 # Delete from our database
                 job.delete()
+                print("Job deleted from table")  # Debug
                 return True
             else:
                 raise Exception("Failed to delete from ModelsLab")
