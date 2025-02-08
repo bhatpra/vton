@@ -93,21 +93,17 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
         num_steps: The number of inference steps for the Stable Diffusion model
         negative_prompt: Optional user-provided negative prompt to append to base negative prompt
     """
+
     # Require authentication for this endpoint
     if not anvil.users.get_user():
         raise Exception("Authentication required")
+    
+    user = anvil.users.get_user()
         
-    # Save to local files
-    model_path = "model_image.jpg"
-    cloth_path = "cloth_image.jpg"
-    with open(model_path, "wb") as f:
-        f.write(user_image.get_bytes())
-    with open(cloth_path, "wb") as f:
-        f.write(cloth_image.get_bytes())
+        # Get latest images for this user
+    user_image_url, cloth_image_url = get_latest_user_images(user)
+        
 
-    # Upload to stable diffusion
-    model_url = upload_to_sd(model_path)
-    cloth_url = upload_to_sd(cloth_path)
 
     # Build payload for the main API
     base_prompt = "A realistic photo of the model wearing the cloth, Maintain color and texture"
@@ -116,7 +112,21 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
     # Combine default negative prompt with user's negative prompt
     base_negative = "Low quality, unrealistic, warped cloth, cloth's hand length should not change"
     final_negative = f"{base_negative}, {negative_prompt}".strip()
-    
+    row=app_tables.try_on_Jobs.get_row(user=anvil.users.get_user()['email'])
+    model_url=row['user_url']
+    cloth_url=row['cloth_url']
+    row['updated']=datetime.now()
+    row['status']="processing"
+    row['prompt']=prompt
+    row['negative_prompt']=negative_prompt
+    row['guidance_scale']=guidance_scale
+    row['num_steps']=num_steps
+    row['cloth_type']=cloth_type
+    row['height']=512
+    row['width']=384
+    row['seed']=128915590
+
+
     payload = json.dumps({
         "key": API_KEY,
         "prompt": final_prompt,
@@ -158,11 +168,11 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
         # Download & return it
         final_image = get_image_as_media(final_url)
         # Store just the request_id and creation time
-        app_tables.try_on_jobs.add_row(
-            request_id=data["request_id"],
-            created=datetime.now(),
-            user=anvil.users.get_user()
-        )
+        row=app_tables.try_on_jobs.get_row(user=anvil.users.get_user()['email'])
+        row['request_id']=data["request_id"]
+        row['created']=datetime.now()
+        row['user']=anvil.users.get_user()
+
         return {"status": "success", "image": final_image}
 
     elif status == "processing":
@@ -290,11 +300,14 @@ def delete_images_now(request_id):
     """Immediately delete user images"""
     try:
         user = anvil.users.get_user()
-        # READ: Get job for this user
+        print(f"Looking for job with request_id: {request_id}")  # Debug
+        
+        # Get job for this user
         job = app_tables.try_on_jobs.get(
             request_id=request_id,
-            user=user  # Only get jobs belonging to this user
+            user=user
         )
+        print(f"Found job: {job}")  # Debug
         
         if job:
             # Call ModelsLab delete API
@@ -310,12 +323,13 @@ def delete_images_now(request_id):
             if response.get('status') == 'success':
                 # Delete from our database
                 job.delete()
+                print("Job deleted from table")  # Debug
                 return True
             else:
                 raise Exception("Failed to delete from ModelsLab")
             
     except Exception as e:
-        print(f"Failed to delete images: {str(e)}")
+        print(f"Table operation error: {str(e)}")  # Debug
         raise
 
 # Create try_on_jobs table if it doesn't exist
@@ -337,11 +351,35 @@ def upload_image(image_type, image_data):
     try:
         # Store in appropriate table
         if image_type == 'user':
-            return app_tables.user_images.add_row(image=image_data)
+            # Save to local files
+            model_path = "model_image.jpg"
+
+            with open(model_path, "wb") as f:
+                f.write(image_data.get_bytes())
+
+            # Upload to stable diffusion
+            model_url = upload_to_sd(model_path)
+            try:
+                row=app_tables.try_on_Jobs.get_row(user=anvil.users.get_user()['email'])
+                row['user_url']=model_url
+            except Exception as e:
+                app_tables.try_on_Jobs.add_row(user=anvil.users.get_user()['email'],user_url=model_url)
+
+                print(f"Adding recordd try_on_Jobs after error: {str(e)}")
+            return model_url
+
         else:
-            return app_tables.cloth_images.add_row(image=image_data)
+            cloth_path = "cloth_image.jpg"
+            with open(cloth_path, "wb") as f:
+                f.write(image_data.get_bytes())
+            cloth_url = upload_to_sd(cloth_path)
+            row=app_tables.try_on_Jobs.get_row(user=anvil.users.get_user()['email'])
+            row['cloth_url']=cloth_url
+            return cloth_url
     except Exception as e:
+
         print(f"Error uploading {image_type} image: {str(e)}")
+
         raise
 
 @anvil.server.callable
