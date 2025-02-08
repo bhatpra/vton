@@ -145,6 +145,7 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
     if status == "success":
         # The API returned an immediate result
         # Usually "proxy_links" or "output" has the final image
+      #TBD
         if "future_links" in data:
             final_url = data["proxy_links"][0]
         if "proxy_links" in data:
@@ -155,6 +156,7 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
             raise Exception("No final image link found in response!")
         # Download & return it
         final_image = get_image_as_media(final_url)
+        delete_images_now(data["file_prefix"])
         return {"status": "success", "image": final_image}
 
     elif status == "processing":
@@ -210,3 +212,26 @@ def save_user_preferences(preferences):
     
     # Save to user's row in the Users table
     user['preferences'] = preferences
+
+@anvil.server.callable
+def delete_images_now(imageid):
+    """Immediately delete user images"""
+    try:
+      # Call ModelsLab delete API
+      response = anvil.http.request(
+          "https://modelslab.com/api/v3/delete_image",
+          method="POST",
+          json={
+              "key": app_secrets.modelslab_api_key,
+              "image": imageid
+          }
+      )
+            
+      if response.get('status') == 'success':
+        print("delete successful:",imageid)
+      else:
+          # raise Exception("Failed to delete from ModelsLab")
+        print("delete failed:"+imageid)
+    except Exception as e:
+      print(f"Delete operation error: {str(e)}")  # Debug
+      raise
