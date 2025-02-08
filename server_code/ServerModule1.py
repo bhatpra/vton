@@ -323,7 +323,6 @@ def delete_images_now(request_id):
             if response.get('status') == 'success':
                 # Delete from our database
                 job.delete()
-                print("Job deleted from table")  # Debug
                 return True
             else:
                 raise Exception("Failed to delete from ModelsLab")
@@ -388,3 +387,8 @@ def get_latest_user_images(user):
     user_image = app_tables.user_images.search(user=user)[-1] if app_tables.user_images.search(user=user) else None
     cloth_image = app_tables.cloth_images.search(user=user)[-1] if app_tables.cloth_images.search(user=user) else None
     return user_image, cloth_image
+
+@anvil.server.callable
+def start_background_upload(image_type, image_data):
+    """Start background upload from server side"""
+    anvil.server.launch_background_task('upload_image', image_type, image_data)

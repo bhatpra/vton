@@ -362,8 +362,9 @@ class Form1(Form1Template):
                 print(f"Compressed user image size: {len(raw_bytes)} bytes")
                 try:
                     # Start background upload
-                    anvil.server.launch_background_task('upload_image', 'user', compressed_media)
-                    print("Uploading image in background ")
+                anvil.server.call('start_background_upload', 'user', compressed_media)
+
+                print("Uploading image in background ")
 
                 except Exception as e:
                     print(f"Error uploading user image in background: {e}")
@@ -420,7 +421,8 @@ class Form1(Form1Template):
                     print("Uploading image in background ")
 
                     # Start background upload  
-                    anvil.server.launch_background_task('upload_image', 'cloth', compressed_media)
+                anvil.server.call('start_background_upload', 'user', compressed_media)
+
 
                 except Exception as e:
                     print(f"Error uploading cloth image in background: {e}")
