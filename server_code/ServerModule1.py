@@ -108,7 +108,7 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
     # Combine default negative prompt with user's negative prompt
     base_negative = "Low quality, unrealistic, warped cloth, cloth's hand length should not change"
     final_negative = f"{base_negative}, {negative_prompt}".strip()
-    row=app_tables.try_on_jobs.get_row(user=anvil.users.get_user()['email'])
+    row=app_tables.try_on_jobs.get(user=anvil.users.get_user()['email'])
     model_url=row['user_url']
     cloth_url=row['cloth_url']
     row['updated']=datetime.now()
@@ -164,7 +164,7 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
         # Download & return it
         final_image = get_image_as_media(final_url)
         # Store just the request_id and creation time
-        row=app_tables.try_on_jobs.get_row(user=anvil.users.get_user()['email'])
+        row=app_tables.try_on_jobs.get(user=anvil.users.get_user()['email'])
         row['request_id']=data["request_id"]
         row['created']=datetime.now()
         row['user']=anvil.users.get_user()
@@ -356,7 +356,7 @@ def upload_image(image_type, image_data):
             # Upload to stable diffusion
             model_url = upload_to_sd(model_path)
             try:
-                row=app_tables.try_on_Jobs.get_row(user=anvil.users.get_user()['email'])
+                row=app_tables.try_on_Jobs.get(user=anvil.users.get_user()['email'])
                 row['user_url']=model_url
             except Exception as e:
                 app_tables.try_on_Jobs.add_row(user=anvil.users.get_user()['email'],user_url=model_url)
@@ -369,7 +369,7 @@ def upload_image(image_type, image_data):
             with open(cloth_path, "wb") as f:
                 f.write(image_data.get_bytes())
             cloth_url = upload_to_sd(cloth_path)
-            row=app_tables.try_on_Jobs.get_row(user=anvil.users.get_user()['email'])
+            row=app_tables.try_on_Jobs.get(user=anvil.users.get_user()['email'])
             row['cloth_url']=cloth_url
             return cloth_url
     except Exception as e:
