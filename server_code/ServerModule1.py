@@ -23,7 +23,7 @@ API_KEY = "TimeKtPLuNBR2UytsfQtArv6c4Wbg4dO0sBqwrIIVTQteu9e7CTbE7IzHTh1"  # Repl
 
 
 global_model_upload_request_id = "" 
-global_model_upload_request_id = "" 
+global_cloth_upload_request_id = "" 
 global_genrequest_id = ""
 
 # -------------
@@ -112,10 +112,10 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
 
     # Upload to stable diffusion
     model_url,global_model_upload_request_id = upload_to_sd(model_path)
-    print("global_model_upload_request_id:"+global_model_upload_request_id)
+    print("global_model_upload_request_id:",global_model_upload_request_id)
 
     cloth_url,global_cloth_upload_request_id = upload_to_sd(cloth_path)  
-    print("global_cloth_upload_request_id:"+global_cloth_upload_request_id)
+    print("global_cloth_upload_request_id:",global_cloth_upload_request_id)
     # Build payload for the main API
     base_prompt = "A realistic photo of the model wearing the cloth, Maintain color and texture"
     final_prompt = f"{base_prompt}, {user_prompt}".strip()
