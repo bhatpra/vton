@@ -20,6 +20,11 @@ API_URL = "https://modelslab.com/api/v6/image_editing/fashion"
 CROP_API_URL = "https://modelslab.com/api/v3/base64_crop"
 API_KEY = "TimeKtPLuNBR2UytsfQtArv6c4Wbg4dO0sBqwrIIVTQteu9e7CTbE7IzHTh1"  # Replace with your Stable Diffusion API key
 
+
+global_model_basename = "" 
+global_model_basename = "" 
+global_model_basename = ""
+
 # -------------
 # Helper funcs
 # -------------
@@ -69,9 +74,6 @@ def upload_to_sd(file_path):
     else:
         raise Exception(f"Failed upload_to_sd: {resp.text}")
 
-model_url = "" 
-cloth_url = "" 
-gen_image = ""
 # -------------
 # Two-step approach
 # -------------
@@ -109,8 +111,12 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
 
     # Upload to stable diffusion
     model_url = upload_to_sd(model_path)
-    cloth_url = upload_to_sd(cloth_path)
+    global_model_basename=get_basename(model_url)
+    print("global_model_basename:"+global_model_basename)
 
+    cloth_url = upload_to_sd(cloth_path)  
+    global_cloth_basename=get_basename(cloth_url)
+    print("global_cloth_basename:"+global_cloth_basename)
     # Build payload for the main API
     base_prompt = "A realistic photo of the model wearing the cloth, Maintain color and texture"
     final_prompt = f"{base_prompt}, {user_prompt}".strip()
@@ -162,10 +168,12 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
         final_image = get_image_as_media(final_url)
 
         print("Deleting input and generated images from server")
-        gen_image=data["file_prefix"]
-        delete_images_now(get_basename(model_url))
-        delete_images_now(get_basename(cloth_url))
-        delete_images_now(gen_image)
+        global_gen_image=data["file_prefix"]
+
+      
+        delete_images_now(global_model_basename)
+        delete_images_now(global_cloth_basename)
+        delete_images_now(global_gen_image)
       
         return {"status": "success", "image": final_image}
 
@@ -206,11 +214,9 @@ def check_try_on(fetch_url):
             raise Exception("No final image link found in success response!")
         final_image = get_image_as_media(final_url)
         print("Deleting input and generated images from server")
-        model_basename=get_basename(model_url)
-        delete_images_now(model_basename)
-        cloth_basename=get_basename(cloth_url)     
-        delete_images_now(cloth_basename)
-        delete_images_now(gen_image)
+        delete_images_now(global_model_basename)
+        delete_images_now(global_cloth_basename)
+        delete_images_now(global_gen_image)
         return {"status": "success", "image": final_image}
 
     elif status == "processing":
