@@ -167,7 +167,7 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
         final_image = get_image_as_media(final_url)
 
         print("Deleting input and generated images from server")
-        global_genrequest_id=data["request_id"]
+        global_genrequest_id=data["id"]
 
       
         delete_images_now(global_model_upload_request_id)
