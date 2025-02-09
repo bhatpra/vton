@@ -69,6 +69,9 @@ def upload_to_sd(file_path):
     else:
         raise Exception(f"Failed upload_to_sd: {resp.text}")
 
+model_url = "" 
+cloth_url = "" 
+gen_image = ""
 # -------------
 # Two-step approach
 # -------------
@@ -92,6 +95,7 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
         negative_prompt: Optional user-provided negative prompt to append to base negative prompt
     """
     # Require authentication for this endpoint
+    print("In start_try_on")
     if not anvil.users.get_user():
         raise Exception("Authentication required")
         
@@ -156,7 +160,13 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
             raise Exception("No final image link found in response!")
         # Download & return it
         final_image = get_image_as_media(final_url)
-        delete_images_now(data["file_prefix"])
+
+        print("Deleting input and generated images from server")
+        gen_image=data["file_prefix"]
+        delete_images_now(get_basename(model_url))
+        delete_images_now(get_basename(cloth_url))
+        delete_images_now(gen_image)
+      
         return {"status": "success", "image": final_image}
 
     elif status == "processing":
@@ -195,6 +205,12 @@ def check_try_on(fetch_url):
         if not final_url:
             raise Exception("No final image link found in success response!")
         final_image = get_image_as_media(final_url)
+        print("Deleting input and generated images from server")
+        model_basename=get_basename(model_url)
+        delete_images_now(model_basename)
+        cloth_basename=get_basename(cloth_url)     
+        delete_images_now(cloth_basename)
+        delete_images_now(gen_image)
         return {"status": "success", "image": final_image}
 
     elif status == "processing":
@@ -235,3 +251,15 @@ def delete_images_now(imageid):
     except Exception as e:
       print(f"Delete operation error: {str(e)}")  # Debug
       raise
+
+
+import os
+from urllib.parse import urlparse
+@anvil.server.callable
+def get_basename(url):
+  #url = "http://photographs.500px.com/kyle/09-09-201315-47-571378756077.jpg"
+  print("in getbasename")
+  a = urlparse(url)
+  print(a.path)                    # Output: /kyle/09-09-201315-47-571378756077.jpg
+  print(os.path.basename(a.path))  # Output: 09-09-201315-47-571378756077.jpg
+  return os.path.basename(a.path)
