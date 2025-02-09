@@ -18,6 +18,7 @@ import anvil.users
 
 API_URL = "https://modelslab.com/api/v6/image_editing/fashion"
 CROP_API_URL = "https://modelslab.com/api/v3/base64_crop"
+DELETE_API_URL='https://modelslab.com/api/v3/delete_image'
 API_KEY = "TimeKtPLuNBR2UytsfQtArv6c4Wbg4dO0sBqwrIIVTQteu9e7CTbE7IzHTh1"  # Replace with your Stable Diffusion API key
 
 
@@ -214,6 +215,9 @@ def check_try_on(fetch_url):
             raise Exception("No final image link found in success response!")
         final_image = get_image_as_media(final_url)
         print("Deleting input and generated images from server")
+        print(global_model_basename)
+        print(global_cloth_basename)
+        print(global_gen_image)
         delete_images_now(global_model_basename)
         delete_images_now(global_cloth_basename)
         delete_images_now(global_gen_image)
@@ -235,25 +239,23 @@ def save_user_preferences(preferences):
     # Save to user's row in the Users table
     user['preferences'] = preferences
 
+
 @anvil.server.callable
 def delete_images_now(imageid):
     """Immediately delete user images"""
     try:
-      # Call ModelsLab delete API
-      response = anvil.http.request(
-          "https://modelslab.com/api/v3/delete_image",
-          method="POST",
-          json={
-              "key": app_secrets.modelslab_api_key,
-              "image": imageid
-          }
-      )
-            
-      if response.get('status') == 'success':
-        print("delete successful:",imageid)
-      else:
-          # raise Exception("Failed to delete from ModelsLab")
-        print("delete failed:"+imageid)
+      payload = json.dumps({
+          "key": API_KEY,
+          "image": imageid
+      })
+      headers = {"Content-Type": "application/json"}
+      print ("request:\n"+payload)
+      resp = requests.post(DELETE_API_URL, headers=headers, data=payload)
+      print(resp)
+
+      if resp.status_code != 200:
+          raise Exception(f"Failed to deelte image: {resp.text}")
+
     except Exception as e:
       print(f"Delete operation error: {str(e)}")  # Debug
       raise
