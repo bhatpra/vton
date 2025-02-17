@@ -113,7 +113,7 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
 
     global global_model_upload_request_id
     global global_cloth_upload_request_id
-    global global_genrequest_id
+
     # Upload to stable diffusion
     model_url,global_model_upload_request_id = upload_to_sd(model_path)
     print("global_model_upload_request_id:",global_model_upload_request_id)
@@ -155,6 +155,8 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
     data = resp.json()
     print(data)
     status = data.get("status")
+    global global_genrequest_id
+    global_genrequest_id=data["id"]
     if status == "success":
         # The API returned an immediate result
         # Usually "proxy_links" or "output" has the final image
@@ -171,7 +173,6 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
         final_image = get_image_as_media(final_url)
 
         print("Deleting input and generated images from server")
-        global_genrequest_id=data["id"]
 
       
         delete_images_now(global_model_upload_request_id)
