@@ -68,6 +68,7 @@ def upload_to_sd(file_path):
     resp = requests.post(CROP_API_URL, headers=headers, data=payload)
     if resp.status_code == 200:
         data = resp.json()
+        print("response from  upload to sd:", data)
         if "link" in data:
             return data["link"], data["request_id"]
         else:
@@ -110,6 +111,9 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
     with open(cloth_path, "wb") as f:
         f.write(cloth_media.get_bytes())
 
+    global global_model_upload_request_id
+    global global_cloth_upload_request_id
+    global global_genrequest_id
     # Upload to stable diffusion
     model_url,global_model_upload_request_id = upload_to_sd(model_path)
     print("global_model_upload_request_id:",global_model_upload_request_id)
@@ -192,6 +196,7 @@ def check_try_on(fetch_url):
     - If success, return {"status": "success", "image": <BlobMedia>}
     - If error, raise exception or return a dict with error info
     """
+
     headers = {"Content-Type": "application/json"}
     payload = json.dumps({"key": API_KEY})
     resp = requests.post(fetch_url, headers=headers, data=payload)
@@ -213,6 +218,9 @@ def check_try_on(fetch_url):
             raise Exception("No final image link found in success response!")
         final_image = get_image_as_media(final_url)
         print("Deleting input and generated images from server")
+        global global_model_upload_request_id
+        global global_cloth_upload_request_id
+        global global_genrequest_id
         print(global_model_upload_request_id)
         print(global_cloth_upload_request_id)
         print(global_genrequest_id)
