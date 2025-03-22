@@ -114,6 +114,19 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
     emailID=anvil.users.get_user()['email']
     print("emailID:"+emailID)
     row=app_tables.try_on_jobs.get(user=emailID)
+    
+    if row is None:
+        # Create a new row if none exists
+        row = app_tables.try_on_jobs.add_row(
+            user=emailID,
+            created=datetime.now(),
+            status="new"
+        )
+        raise Exception("Please upload model and cloth images first")
+    
+    if 'user_url' not in row or 'cloth_url' not in row:
+        raise Exception("Please upload both model and cloth images first")
+        
     model_url=row['user_url']
     cloth_url=row['cloth_url']
     row['updated']=datetime.now()
@@ -361,13 +374,12 @@ def upload_image(image_type, image_data):
             # Upload to stable diffusion
             model_url = upload_to_sd(model_path)
             try:
-                row=app_tables.try_on_Jobs.get(user=anvil.users.get_user()['email'])
+                row=app_tables.try_on_jobs.get(user=anvil.users.get_user()['email'])
                 row['user_url']=model_url
             except Exception as e:
-                print("addeing row:mmodel_url"+model_url)
-                app_tables.try_on_Jobs.add_row(user=anvil.users.get_user()['email'],user_url=model_url)
-
-                print(f"Adding recordd try_on_Jobs after error: {str(e)}")
+                print("adding row: model_url "+model_url)
+                app_tables.try_on_jobs.add_row(user=anvil.users.get_user()['email'],user_url=model_url)
+                print(f"Adding record try_on_jobs after error: {str(e)}")
             return model_url
 
         else:
@@ -375,7 +387,7 @@ def upload_image(image_type, image_data):
             with open(cloth_path, "wb") as f:
                 f.write(image_data.get_bytes())
             cloth_url = upload_to_sd(cloth_path)
-            row=app_tables.try_on_Jobs.get(user=anvil.users.get_user()['email'])
+            row=app_tables.try_on_jobs.get(user=anvil.users.get_user()['email'])
             row['cloth_url']=cloth_url
             return cloth_url
     except Exception as e:
