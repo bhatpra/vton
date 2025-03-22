@@ -20,28 +20,6 @@ import anvil.js
 import base64
 import time
 
-
-def get_platform():
-    ua = anvil.js.window.navigator.userAgent.lower()
-
-    if "iphone" in ua or "ipad" in ua or "ipod" in ua:
-        return "iOS"
-    elif "android" in ua:
-        return "Android"
-    else:
-        return "Other"  # e.g. desktop, macOS, Windows, etc.
-
-def is_standalone():
-    # On iOS, `navigator.standalone` is True if launched from the home screen
-    # On many other devices, `(display-mode: standalone)` is True if running as a PWA
-    navigator = anvil.js.window.navigator
-    if hasattr(navigator, "standalone") and navigator.standalone:
-        # iOS home-screen web app
-        return True
-    else:
-        # Check PWA standalone mode on Android / other
-        return anvil.js.window.matchMedia("(display-mode: standalone)").matches
-
 class Form1(Form1Template):
     """
     Main form class that handles the virtual try-on interface and logic.
@@ -68,31 +46,10 @@ class Form1(Form1Template):
             
         self.init_components(**properties)
         self.connection_retries = 0  # Initialize retry counter
-      
-        platform = get_platform()
-        is_app_standalone = is_standalone()
-
-        home_screen_help=""
-        if platform == "iOS":
-            if is_app_standalone:
-              #alert("Running on iOS as an installed web app (Home Screen).")
-              home_screen_help="FYI: Running on iOS as an installed web app (Home Screen)"
-            else:
-              #alert("Running on iOS in a normal browser tab.")
-              #home_screen_help="FYI: Running on iOS in a normal browser tab. To add to home screen: scroll down in safari browser, press share icon, scroll down and choose: Add to Home Screen"
-              home_screen_help="FYI: To add this app to home screen: press share icon at the bottom, scroll down and choose: Add to Home Screen"
-                
-        elif platform == "Android":
-            if is_app_standalone:
-                home_screen_help="FYI: Running on Android as a PWA."
-            else:
-                home_screen_help="FYI: Running on Android in a normal browser tab."
-        else:
-            home_screen_help="FYI:Running on desktop or another platform."
-
+        
         # Add help text at the top
         self.help_label = Label(
-            text="1. Upload your photo\n2. Upload clothing item\n3. Select clothing type\n4. Add optional prompts\n5. Click Start\n(Scroll down if needed).\n"+home_screen_help,
+            text="1. Upload your photo\n2. Upload clothing item\n3. Select clothing type\n4. Add optional prompts\n5. Click Start\n(Scroll down if needed)",
             role="body",
             spacing_below="small"
         )
@@ -144,7 +101,7 @@ class Form1(Form1Template):
 
         # Title
         self.label_title = Label(
-            text="EZTry.AI : AI Powered \nApparel Try-On WebApp \nversion 0.30",
+            text="EZTry.AI : AI Powered \nApparel Try-On WebApp \nversion 0.29",
             align="center",
             font_size=20,
             bold=True,
@@ -316,7 +273,6 @@ class Form1(Form1Template):
         # Final result image
         self.image_result = Image(width=400, height=400, align="center")
         self.add_component(self.image_result)
-
 
         # Store media & fetch_url
         self.user_media = None
