@@ -48,6 +48,7 @@ db_schema:
     - admin_ui: {order: 14, width: 200}
       name: width
       type: number
+    - {admin_ui: null, name: status, type: string}
     server: full
     title: try_on_jobs
   users:
