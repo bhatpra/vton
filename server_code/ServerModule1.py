@@ -120,11 +120,13 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
         row = app_tables.try_on_jobs.add_row(
             user=emailID,
             created=datetime.now(),
-            status="new"
+            status="new",
+            user_url=None,
+            cloth_url=None
         )
         raise Exception("Please upload model and cloth images first")
     
-    if 'user_url' not in row or 'cloth_url' not in row:
+    if row.get('user_url') is None or row.get('cloth_url') is None:
         raise Exception("Please upload both model and cloth images first")
         
     model_url=row['user_url']
@@ -355,26 +357,21 @@ except AttributeError:
         [
             ('request_id', str),
             ('created', datetime),
-            ('user', str)
+            ('updated', datetime),
+            ('user', str),
+            ('status', str),
+            ('user_url', str),
+            ('cloth_url', str),
+            ('prompt', str),
+            ('negative_prompt', str),
+            ('guidance_scale', float),
+            ('num_steps', int),
+            ('cloth_type', str),
+            ('height', int),
+            ('width', int),
+            ('seed', int)
         ]
     )
-
-# Add any missing columns to the table
-try:
-    app_tables.try_on_jobs.add_column('status', str)
-    app_tables.try_on_jobs.add_column('user_url', str)
-    app_tables.try_on_jobs.add_column('cloth_url', str)
-    app_tables.try_on_jobs.add_column('updated', datetime)
-    app_tables.try_on_jobs.add_column('prompt', str)
-    app_tables.try_on_jobs.add_column('negative_prompt', str)
-    app_tables.try_on_jobs.add_column('guidance_scale', float)
-    app_tables.try_on_jobs.add_column('num_steps', int)
-    app_tables.try_on_jobs.add_column('cloth_type', str)
-    app_tables.try_on_jobs.add_column('height', int)
-    app_tables.try_on_jobs.add_column('width', int)
-    app_tables.try_on_jobs.add_column('seed', int)
-except Exception as e:
-    print(f"Some columns may already exist: {str(e)}")
 
 @anvil.server.background_task
 def upload_image(image_type, image_data):
