@@ -20,7 +20,9 @@ import anvil.http
 
 API_URL = "https://modelslab.com/api/v6/image_editing/fashion"
 CROP_API_URL = "https://modelslab.com/api/v3/base64_crop"
-API_KEY = "TimeKtPLuNBR2UytsfQtArv6c4Wbg4dO0sBqwrIIVTQteu9e7CTbE7IzHTh1"  # Replace with your Stable Diffusion API key
+
+# Get API key from Anvil Secrets
+API_KEY = anvil.secrets.get_secret('modelslab_api_key')  # Store your API key in Anvil Secrets
 
 # -------------
 # Helper funcs
