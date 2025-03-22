@@ -42,6 +42,10 @@ runtime_options:
   server_spec: {base: python310-machine-learning}
   server_version: python3-sandbox
   version: 2
+secrets:
+  modelslab_api_key:
+    type: secret
+    value: {3AS7WR6YQB3LWBCS: mOOvXm+rbB0X1nu0hJhVSoZpXsNinP0+IxjVSXx0MqHMpPSryxbR2S/OJwE1xQZYz/GEE25S1QoRGKo/ogXaCoYs3dhd473tyuFCqLMNYT5ZpFUtXbiLRaiQG9TaJT4yYY/cKbY+79W24a+Ekn3TWpKrNAR2pGyx420Vh0orajDJg3xA2Jc0ZevJsZMvu2m0r2KLm2x2Tn8LmtY=}
 services:
 - client_config: {}
   server_config: {}
@@ -61,4 +65,7 @@ services:
 - client_config: {}
   server_config: {}
   source: /runtime/services/anvil/saml.yml
+- client_config: {}
+  server_config: {}
+  source: /runtime/services/anvil/secrets.yml
 startup_form: Form1

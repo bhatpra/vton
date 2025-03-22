@@ -513,7 +513,7 @@ class Form1(Form1Template):
                 self.fetch_url = None
         except Exception as e:
             self.connection_retries += 1
-            if self.connection_retries >= 10:  # Stop after 10 failures
+            if self.connection_retries >= 100:  # Stop after 10 failures
                 self.label_status.text = "Connection failed. Please try again."
                 self.timer_poll.enabled = False
                 self.button_start.enabled = True
