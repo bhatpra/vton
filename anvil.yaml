@@ -95,6 +95,10 @@ runtime_options:
   server_version: python3-sandbox
   version: 2
 scheduled_tasks: []
+secrets:
+  modelslab_api_key:
+    type: secret
+    value: {3AS7WR6YQB3LWBCS: KJm1G+z3CmhSAFfd4mXSJDJYULIVDEU1hswpEadTdPAUeasuvu+MiqNbQUJ0d+Fwf3FMMC9U+QIWS+nzxIUyExxGEQeA23sP4Sv0fT+Y++TopJEp9D7wEuos4kXfVKHep34ZxXs90ZfpMKUmia0DKxgMSVKRk1x25TvkBw4xEAJiYMhEZAs6q3YCXGukwg99cwz4h/AogxyJZW4=}
 services:
 - client_config: {}
   server_config: {}
@@ -114,4 +118,7 @@ services:
 - client_config: {}
   server_config: {}
   source: /runtime/services/anvil/saml.yml
+- client_config: {}
+  server_config: {}
+  source: /runtime/services/anvil/secrets.yml
 startup_form: Form1

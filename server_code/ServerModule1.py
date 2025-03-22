@@ -1,3 +1,4 @@
+import anvil.secrets
 import anvil.microsoft.auth
 import anvil.facebook.auth
 import anvil.google.auth, anvil.google.drive, anvil.google.mail
@@ -110,7 +111,9 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
     # Combine default negative prompt with user's negative prompt
     base_negative = "Low quality, unrealistic, warped cloth, cloth's hand length should not change"
     final_negative = f"{base_negative}, {negative_prompt}".strip()
-    row=app_tables.try_on_jobs.get(user=anvil.users.get_user()['email'])
+    emailID=anvil.users.get_user()['email']
+    print("emailID:"+emailID)
+    row=app_tables.try_on_jobs.get(user=emailID)
     model_url=row['user_url']
     cloth_url=row['cloth_url']
     row['updated']=datetime.now()
@@ -345,7 +348,7 @@ except AttributeError:
 
 @anvil.server.background_task
 def upload_image(image_type, image_data):
-    """Store image in database"""
+    print("Store image in database:image_type", image_type)
     try:
         # Store in appropriate table
         if image_type == 'user':
@@ -361,6 +364,7 @@ def upload_image(image_type, image_data):
                 row=app_tables.try_on_Jobs.get(user=anvil.users.get_user()['email'])
                 row['user_url']=model_url
             except Exception as e:
+                print("addeing row:mmodel_url"+model_url)
                 app_tables.try_on_Jobs.add_row(user=anvil.users.get_user()['email'],user_url=model_url)
 
                 print(f"Adding recordd try_on_Jobs after error: {str(e)}")
