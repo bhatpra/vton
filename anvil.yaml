@@ -100,8 +100,8 @@ secrets:
     type: secret
     value: {3AS7WR6YQB3LWBCS: KJm1G+z3CmhSAFfd4mXSJDJYULIVDEU1hswpEadTdPAUeasuvu+MiqNbQUJ0d+Fwf3FMMC9U+QIWS+nzxIUyExxGEQeA23sP4Sv0fT+Y++TopJEp9D7wEuos4kXfVKHep34ZxXs90ZfpMKUmia0DKxgMSVKRk1x25TvkBw4xEAJiYMhEZAs6q3YCXGukwg99cwz4h/AogxyJZW4=}
 services:
-- client_config: {}
-  server_config: {}
+- client_config: {enable_v2: true}
+  server_config: {auto_create_missing_columns: true}
   source: /runtime/services/tables.yml
 - client_config: {allow_remember_me: true, allow_signup: true, confirm_email: true, enable_automatically: true, remember_me_days: 30, require_secure_passwords: true, share_login_status: true, use_email: true, use_facebook: false, use_google: true, use_microsoft: true, use_saml: false, use_token: true}
   server_config: {user_table: users}
