@@ -355,7 +355,19 @@ except AttributeError:
         [
             ('request_id', str),
             ('created', datetime),
-            ('user', str)
+            ('updated', datetime),
+            ('user', str),
+            ('status', str),
+            ('user_url', str),
+            ('cloth_url', str),
+            ('prompt', str),
+            ('negative_prompt', str),
+            ('guidance_scale', float),
+            ('num_steps', int),
+            ('cloth_type', str),
+            ('height', int),
+            ('width', int),
+            ('seed', int)
         ]
     )
 
@@ -363,37 +375,39 @@ except AttributeError:
 def upload_image(image_type, image_data):
     print("Store image in database:image_type", image_type)
     try:
-        # Store in appropriate table
+        emailID = anvil.users.get_user()['email']
+        
+        # Get existing row or create new one
+        row = app_tables.try_on_jobs.get(user=emailID)
+        if row is None:
+            row = app_tables.try_on_jobs.add_row(
+                user=emailID,
+                created=datetime.now(),
+                status="new",
+                user_url=None,
+                cloth_url=None
+            )
+        
+        # Save file locally
+        file_path = "model_image.jpg" if image_type == 'user' else "cloth_image.jpg"
+        with open(file_path, "wb") as f:
+            f.write(image_data.get_bytes())
+            
+        # Upload to stable diffusion and get URL
+        url = upload_to_sd(file_path)
+        
+        # Update the appropriate URL in database
         if image_type == 'user':
-            # Save to local files
-            model_path = "model_image.jpg"
-
-            with open(model_path, "wb") as f:
-                f.write(image_data.get_bytes())
-
-            # Upload to stable diffusion
-            model_url = upload_to_sd(model_path)
-            try:
-                row=app_tables.try_on_jobs.get(user=anvil.users.get_user()['email'])
-                row['user_url']=model_url
-            except Exception as e:
-                print("adding row: model_url "+model_url)
-                app_tables.try_on_jobs.add_row(user=anvil.users.get_user()['email'],user_url=model_url)
-                print(f"Adding record try_on_jobs after error: {str(e)}")
-            return model_url
-
+            row.update(user_url=url)
+            print(f"Updated user_url to {url}")
         else:
-            cloth_path = "cloth_image.jpg"
-            with open(cloth_path, "wb") as f:
-                f.write(image_data.get_bytes())
-            cloth_url = upload_to_sd(cloth_path)
-            row=app_tables.try_on_jobs.get(user=anvil.users.get_user()['email'])
-            row['cloth_url']=cloth_url
-            return cloth_url
+            row.update(cloth_url=url)
+            print(f"Updated cloth_url to {url}")
+            
+        return url
+            
     except Exception as e:
-
         print(f"Error uploading {image_type} image: {str(e)}")
-
         raise
 
 @anvil.server.callable
