@@ -115,19 +115,24 @@ def start_try_on(user_image, cloth_image, prompt="", cloth_type="dresses", guida
     print("emailID:"+emailID)
     row=app_tables.try_on_jobs.get(user=emailID)
     
-    if row is None:
-        # Create a new row if none exists
-        row = app_tables.try_on_jobs.add_row(
-            user=emailID,
-            created=datetime.now(),
-            status="new",
-            user_url=None,
-            cloth_url=None
-        )
-        raise Exception("Please upload model and cloth images first")
-    
-    if row.get('user_url') is None or row.get('cloth_url') is None:
-        raise Exception("Please upload both model and cloth images first")
+    if row is None or row.get('user_url') is None or row.get('cloth_url') is None:
+        # Either no row exists or images are not uploaded yet
+        if row is None:
+            # Create a new row if none exists
+            row = app_tables.try_on_jobs.add_row(
+                user=emailID,
+                created=datetime.now(),
+                status="new",
+                user_url=None,
+                cloth_url=None
+            )
+        # Now check which images are missing and provide a specific message
+        if row.get('user_url') is None and row.get('cloth_url') is None:
+            raise Exception("Please upload both model and cloth images first")
+        elif row.get('user_url') is None:
+            raise Exception("Please upload the model image first")
+        else:
+            raise Exception("Please upload the cloth image first")
         
     model_url=row['user_url']
     cloth_url=row['cloth_url']
@@ -379,16 +384,7 @@ def upload_image(image_type, image_data):
     try:
         emailID = anvil.users.get_user()['email']
         
-        # Get existing row or create new one
-        row = app_tables.try_on_jobs.get(user=emailID)
-        if row is None:
-            row = app_tables.try_on_jobs.add_row(
-                user=emailID,
-                created=datetime.now(),
-                status="new",
-                user_url=None,
-                cloth_url=None
-            )
+
         
         # Save file locally
         file_path = "model_image.jpg" if image_type == 'user' else "cloth_image.jpg"
@@ -397,12 +393,23 @@ def upload_image(image_type, image_data):
             
         # Upload to stable diffusion and get URL
         url = upload_to_sd(file_path)
+
+        print("Adding/updating row");        # Get existing row or create new one
+        row = app_tables.try_on_jobs.get(user=emailID)
+        if row is None:
+            row = app_tables.try_on_jobs.add_row(
+                user=emailID,
+                created=datetime.now(),
+                status="new" 
+            )
         
         # Update the appropriate URL in database
         if image_type == 'user':
+            print("Updating user_url:",url);
             row.update(user_url=url)
             print(f"Updated user_url to {url}")
         else:
+            print("Updating cloth_url:",url);
             row.update(cloth_url=url)
             print(f"Updated cloth_url to {url}")
             
