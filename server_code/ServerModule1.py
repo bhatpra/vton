@@ -18,13 +18,7 @@ import anvil.users
 
 API_URL = "https://modelslab.com/api/v6/image_editing/fashion"
 CROP_API_URL = "https://modelslab.com/api/v3/base64_crop"
-DELETE_API_URL='https://modelslab.com/api/v3/delete_image'
 API_KEY = "TimeKtPLuNBR2UytsfQtArv6c4Wbg4dO0sBqwrIIVTQteu9e7CTbE7IzHTh1"  # Replace with your Stable Diffusion API key
-
-
-global_model_upload_request_id = "" 
-global_cloth_upload_request_id = "" 
-global_genrequest_id = ""
 
 # -------------
 # Helper funcs
@@ -68,9 +62,8 @@ def upload_to_sd(file_path):
     resp = requests.post(CROP_API_URL, headers=headers, data=payload)
     if resp.status_code == 200:
         data = resp.json()
-        print("response from  upload to sd:", data)
         if "link" in data:
-            return data["link"], data["request_id"]
+            return data["link"]
         else:
             raise Exception(f"Unexpected response: {data}")
     else:
@@ -99,7 +92,6 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
         negative_prompt: Optional user-provided negative prompt to append to base negative prompt
     """
     # Require authentication for this endpoint
-    print("In start_try_on")
     if not anvil.users.get_user():
         raise Exception("Authentication required")
         
@@ -111,15 +103,10 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
     with open(cloth_path, "wb") as f:
         f.write(cloth_media.get_bytes())
 
-    global global_model_upload_request_id
-    global global_cloth_upload_request_id
-
     # Upload to stable diffusion
-    model_url,global_model_upload_request_id = upload_to_sd(model_path)
-    print("global_model_upload_request_id:",global_model_upload_request_id)
+    model_url = upload_to_sd(model_path)
+    cloth_url = upload_to_sd(cloth_path)
 
-    cloth_url,global_cloth_upload_request_id = upload_to_sd(cloth_path)  
-    print("global_cloth_upload_request_id:",global_cloth_upload_request_id)
     # Build payload for the main API
     base_prompt = "A realistic photo of the model wearing the cloth, Maintain color and texture"
     final_prompt = f"{base_prompt}, {user_prompt}".strip()
@@ -155,12 +142,9 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
     data = resp.json()
     print(data)
     status = data.get("status")
-    global global_genrequest_id
-    global_genrequest_id=data["id"]
     if status == "success":
         # The API returned an immediate result
         # Usually "proxy_links" or "output" has the final image
-      #TBD
         if "future_links" in data:
             final_url = data["proxy_links"][0]
         if "proxy_links" in data:
@@ -171,14 +155,6 @@ def start_try_on(user_media, cloth_media, user_prompt="", cloth_type="dresses", 
             raise Exception("No final image link found in response!")
         # Download & return it
         final_image = get_image_as_media(final_url)
-
-        print("Deleting input and generated images from server")
-
-      
-        delete_images_now(global_model_upload_request_id)
-        delete_images_now(global_cloth_upload_request_id)
-        delete_images_now(global_genrequest_id)
-      
         return {"status": "success", "image": final_image}
 
     elif status == "processing":
@@ -197,7 +173,6 @@ def check_try_on(fetch_url):
     - If success, return {"status": "success", "image": <BlobMedia>}
     - If error, raise exception or return a dict with error info
     """
-
     headers = {"Content-Type": "application/json"}
     payload = json.dumps({"key": API_KEY})
     resp = requests.post(fetch_url, headers=headers, data=payload)
@@ -218,16 +193,6 @@ def check_try_on(fetch_url):
         if not final_url:
             raise Exception("No final image link found in success response!")
         final_image = get_image_as_media(final_url)
-        print("Deleting input and generated images from server")
-        global global_model_upload_request_id
-        global global_cloth_upload_request_id
-        global global_genrequest_id
-        print(global_model_upload_request_id)
-        print(global_cloth_upload_request_id)
-        print(global_genrequest_id)
-        delete_images_now(global_model_upload_request_id)
-        delete_images_now(global_cloth_upload_request_id)
-        delete_images_now(global_genrequest_id)
         return {"status": "success", "image": final_image}
 
     elif status == "processing":
@@ -245,36 +210,3 @@ def save_user_preferences(preferences):
     
     # Save to user's row in the Users table
     user['preferences'] = preferences
-
-
-@anvil.server.callable
-def delete_images_now(request_id):
-    """Immediately delete user images"""
-    try:
-      payload = json.dumps({
-          "key": API_KEY,
-          "request_id": request_id
-      })
-      headers = {"Content-Type": "application/json"}
-      print ("request:\n"+payload)
-      resp = requests.post(DELETE_API_URL, headers=headers, data=payload)
-      print(resp)
-
-      if resp.status_code != 200:
-          raise Exception(f"Failed to deelte image: {resp.text}")
-
-    except Exception as e:
-      print(f"Delete operation error: {str(e)}")  # Debug
-      raise
-
-
-import os
-from urllib.parse import urlparse
-@anvil.server.callable
-def get_basename(url):
-  #url = "http://photographs.500px.com/kyle/09-09-201315-47-571378756077.jpg"
-  print("in getbasename")
-  a = urlparse(url)
-  print(a.path)                    # Output: /kyle/09-09-201315-47-571378756077.jpg
-  print(os.path.basename(a.path))  # Output: 09-09-201315-47-571378756077.jpg
-  return os.path.basename(a.path)
