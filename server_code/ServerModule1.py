@@ -1,3 +1,4 @@
+import anvil.secrets
 import anvil.microsoft.auth
 import anvil.facebook.auth
 import anvil.google.auth, anvil.google.drive, anvil.google.mail
@@ -19,8 +20,8 @@ import anvil.users
 API_URL = "https://modelslab.com/api/v6/image_editing/fashion"
 CROP_API_URL = "https://modelslab.com/api/v3/base64_crop"
 DELETE_API_URL='https://modelslab.com/api/v3/delete_image'
-API_KEY = "TimeKtPLuNBR2UytsfQtArv6c4Wbg4dO0sBqwrIIVTQteu9e7CTbE7IzHTh1"  # Replace with your Stable Diffusion API key
-
+# Get API key from Anvil Secrets
+API_KEY = anvil.secrets.get_secret('modelslab_api_key')  # Store your API key in Anvil Secrets
 
 global_model_upload_request_id = "" 
 global_cloth_upload_request_id = "" 
