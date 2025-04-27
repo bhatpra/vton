@@ -45,7 +45,7 @@ runtime_options:
 secrets:
   modelslab_api_key:
     type: secret
-    value: {3AS7WR6YQB3LWBCS: mOOvXm+rbB0X1nu0hJhVSoZpXsNinP0+IxjVSXx0MqHMpPSryxbR2S/OJwE1xQZYz/GEE25S1QoRGKo/ogXaCoYs3dhd473tyuFCqLMNYT5ZpFUtXbiLRaiQG9TaJT4yYY/cKbY+79W24a+Ekn3TWpKrNAR2pGyx420Vh0orajDJg3xA2Jc0ZevJsZMvu2m0r2KLm2x2Tn8LmtY=}
+    value: {3AS7WR6YQB3LWBCS: OhJIM6vQxdfmSXzIbfiGwo8mTWZ4nt8lah/nmQx2FJmRqCqGY/gJ+EWRVOqYlaJY4pSmB+nZteqfzI+LhTJ5+sf0mM3LDKD3Rhvj7qqgAcotFHb4GmL9nKuGzroz9rylY1x5mBxLDlNGYcqJTVo/2JRdlv9JAD2fn373wiPaQ45Xhf47IIIx150FX9FCSPSR7oL460vibfQzsi4=}
 services:
 - client_config: {}
   server_config: {}
